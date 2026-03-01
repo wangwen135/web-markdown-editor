@@ -1,0 +1,166 @@
+# ==============================
+# IDE 和编辑器
+# ==============================
+.idea/
+.vscode/
+.claude/
+/CLAUDE.md
+.fleet/
+*.swp
+*.swo
+*.swn
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[nN]etrwHelp
+*.vim
+.Vimball
+
+# Emacs
+*\~
+\#*\#
+./\#*\#
+.dir-locals.el
+.elc
+
+# VS Code
+.vscode-test/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+*.launch
+
+# ==============================
+# 操作系统文件
+# ==============================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================
+# 打包和压缩文件
+# ==============================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.tgz
+*.bz2
+*.xz
+*.gz
+
+# ==============================
+# 临时文件和日志
+# ==============================
+*.tmp
+*.temp
+*.log
+*.log.*
+*.cache
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================
+# 编辑器备份
+# ==============================
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+
+# ==============================
+# Node.js (如果将来使用)
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==============================
+# 测试和覆盖率
+# ==============================
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+
+# ==============================
+# 构建产物
+# ==============================
+dist/
+build/
+out/
+.output/
+.next/
+.nuxt/
+.vuepress/dist/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+
+# ==============================
+# 其他
+# ==============================
+.env
+.env.local
+.env.*.local
+*.pem
+.userprofiles
+.history/
+sync-status.json
+
