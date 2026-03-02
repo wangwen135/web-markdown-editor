@@ -386,8 +386,25 @@
         #tb-color-dropdown .dropdown-item {
             padding: 12px 16px;
             font-size: 14px;
-            border: none;
+            border: 2px solid transparent;
             background: transparent;
+            transition: border-color 0.2s;
+        }
+
+        /* 颜色选择器hover效果 - 使用边框而不是背景色 */
+        #tb-color-dropdown .dropdown-item:hover,
+        .editor-bg-color:hover {
+            border-color: #228be6 !important;
+            background: transparent !important;
+        }
+
+        /* 主题选择器菜单项也使用边框hover */
+        #theme-dropdown .dropdown-item {
+            border: 2px solid transparent;
+        }
+
+        #theme-dropdown .dropdown-item:hover {
+            border-color: #228be6 !important;
         }
 
         .text-black-50 {
@@ -1179,6 +1196,91 @@
                 page-break-inside: avoid;
             }
         }
+
+        /* 拨动开关样式 */
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .setting-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .setting-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 12px;
+        }
+
+        .setting-switch {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 20px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .setting-switch.active {
+            background-color: #228be6;
+        }
+
+        .setting-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .setting-switch.active::after {
+            transform: translateX(16px);
+        }
+
+        /* 设置下拉菜单中的特殊样式 */
+        #settings-dropdown .dropdown-item {
+            padding: 0 !important;
+        }
+
+        #settings-dropdown .btn.dropdown-item {
+            padding: 8px 16px !important;
+        }
+
+        /* 确保设置菜单中的按钮有 hover 效果 */
+        #settings-dropdown .btn.dropdown-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .dark #settings-dropdown .btn.dropdown-item:hover {
+            background-color: #343a40;
+        }
+
+        /* 恢复所有下拉菜单中按钮的 hover 效果 */
+        .dropdown-menu .btn.dropdown-item:hover,
+        .dropdown-menu .btn-control.dropdown-item:hover {
+            background-color: #e9ecef !important;
+        }
+
+        .dark .dropdown-menu .btn.dropdown-item:hover,
+        .dark .dropdown-menu .btn-control.dropdown-item:hover {
+            background-color: #343a40 !important;
+        }
     </style>
 </head>
 
@@ -1290,19 +1392,36 @@ MIT License
             </button>
             <ul id="settings-dropdown" class="dropdown-menu min-w-2rem">
                 <li>
-                    <button id="settings-toggleToolbar" class="btn btn-control btn-p-sm dropdown-item" onclick="toggleToolbar()">
-                        <i class="bi bi-caret-up"></i> 工具栏隐藏
-                    </button>
+                    <div class="dropdown-item">
+                        <div class="setting-item" onclick="event.stopPropagation(); toggleToolbar();">
+                            <span class="setting-label"><i class="bi bi-menu-button"></i> 工具栏</span>
+                            <div class="setting-switch" id="switch-toolbar"></div>
+                        </div>
+                    </div>
                 </li>
                 <li>
-                    <button id="settings-toggleFootBar" class="btn btn-control btn-p-sm dropdown-item" onclick="toggleFootBar()">
-                        <i class="bi bi-caret-down"></i> 状态栏隐藏
-                    </button>
+                    <div class="dropdown-item">
+                        <div class="setting-item" onclick="event.stopPropagation(); toggleFootBar();">
+                            <span class="setting-label"><i class="bi bi-info-square"></i> 状态栏</span>
+                            <div class="setting-switch" id="switch-footbar"></div>
+                        </div>
+                    </div>
                 </li>
                 <li>
-                    <button id="settings-toggleSyncScroll" class="btn btn-control btn-p-sm dropdown-item" onclick="toggleSyncScrollSetting()">
-                        <i class="bi bi-arrows-vertical"></i> 同步滚动
-                    </button>
+                    <div class="dropdown-item">
+                        <div class="setting-item" onclick="event.stopPropagation(); toggleSyncScrollSetting();">
+                            <span class="setting-label"><i class="bi bi-arrows-vertical"></i> 同步滚动</span>
+                            <div class="setting-switch" id="sync-scroll"></div>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="dropdown-item">
+                        <div class="setting-item" onclick="event.stopPropagation(); togglePasteImageAsBase64();">
+                            <span class="setting-label"><i class="bi bi-clipboard-image"></i> 粘贴图片为 Base64</span>
+                            <div class="setting-switch active" id="paste-image-base64"></div>
+                        </div>
+                    </div>
                 </li>
                 <li>
                     <hr class="dropdown-divider">
@@ -1365,7 +1484,7 @@ MIT License
             </button>
 
             <!--分隔-->
-            <span class="text-black-50 mx-1">|</span>
+            <!--<span class="text-black-50 mx-1">|</span>-->
 
             <!--标题 -->
             <div class="dropdown d-inline-block">
@@ -1411,7 +1530,7 @@ MIT License
             </div>
 
             <!--分隔-->
-            <span class="text-black-50 mx-1">|</span>
+            <!--<span class="text-black-50 mx-1">|</span>-->
 
             <!--水平线-->
             <button id="tb-horizontal-line" class="btn btn-control btn-p-sm" data-bs-toggle="tooltip"
@@ -1425,12 +1544,12 @@ MIT License
             </button>
             <!--无序列表-->
             <button id="tb-unordered-list" class="btn btn-control btn-p-sm" data-bs-toggle="tooltip"
-                    data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="无序标题<br><b>Ctrl+Shift+[</b>">
+                    data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="无序列表">
                 <i class="bi bi-list-ul"></i>
             </button>
             <!--有序列表-->
             <button id="tb-ordered-list" class="btn btn-control btn-p-sm" data-bs-toggle="tooltip"
-                    data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="有序标题<br><b>Ctrl+Shift+]</b>">
+                    data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="有序列表">
                 <i class="bi bi-list-ol"></i>
             </button>
             <!--未勾选-->
@@ -1448,7 +1567,7 @@ MIT License
 
             <!--表格-->
             <button id="tb-table" class="btn btn-control btn-p-sm" data-bs-toggle="tooltip"
-                    data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="表格<br><b>Ctrl+Shift+T</b>">
+                    data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="表格">
                 <i class="bi bi-table"></i>
             </button>
             <!--图片-->
@@ -1471,6 +1590,53 @@ MIT License
                     data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="代码块">
                 <i class="bi bi-code-square"></i>
             </button>
+            <!--流程图下拉框-->
+            <div class="dropdown d-inline-block">
+                <div data-bs-toggle="dropdown" aria-expanded="false">
+                    <button id="tb-flowchart" class="btn btn-control btn-p-sm dropdown-toggle"
+                            data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="left"
+                            title="流程图">
+                        <i class="bi bi-diagram-3"></i>
+                    </button>
+                </div>
+                <ul id="flowchart-dropdown" class="dropdown-menu min-w-2rem">
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('basic')">
+                            <i class="bi bi-diagram-3"></i> 基础流程图
+                        </button>
+                    </li>
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('sequence')">
+                            <i class="bi bi-diagram-3"></i> 时序图
+                        </button>
+                    </li>
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('state')">
+                            <i class="bi bi-diagram-3"></i> 状态图
+                        </button>
+                    </li>
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('class')">
+                            <i class="bi bi-diagram-3"></i> 类图
+                        </button>
+                    </li>
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('gantt')">
+                            <i class="bi bi-diagram-3"></i> 甘特图
+                        </button>
+                    </li>
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('mindmap')">
+                            <i class="bi bi-diagram-3"></i> 思维导图
+                        </button>
+                    </li>
+                    <li>
+                        <button class="btn btn-control btn-p-sm dropdown-item" onclick="insertFlowchart('er')">
+                            <i class="bi bi-diagram-3"></i> ER图
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
             <!--右侧按钮组-->
             <!--字体大小-->
@@ -1652,20 +1818,18 @@ sequenceDiagram
 - `Ctrl+U`: 下划线
 - `Ctrl+Shift+S`: 删除线
 
-#### 标题和列表
+#### 标题和引用
 - `Ctrl+1` ~ `Ctrl+6`: 插入 1-6 级标题
 - `Ctrl+Shift+Q`: 引用
-- `Ctrl+Shift+[`: 无序列表
-- `Ctrl+Shift+]`: 有序列表
-
-#### 插入元素
-- `Ctrl+Shift+T`: 插入表格
 
 #### 编辑操作
 - `Ctrl+S`: 保存文件
 - `Ctrl+D`: 删除当前行
 - `Ctrl+Z`: 撤销
 - `Ctrl+Y` 或 `Ctrl+Shift+Z`: 重做
+
+#### 其他功能
+- 粘贴图片自动转换为 Base64 格式（可在高级设置中关闭）
 
 ### 导出功能
 支持导出为 PDF、图片、HTML 等多种格式。
@@ -1857,6 +2021,7 @@ sequenceDiagram
     // 工具栏和状态栏显示状态
     let isToolbarVisible = localStorage.getItem("mdEditor_toolbarVisible") !== "false";
     let isFootBarVisible = localStorage.getItem("mdEditor_footBarVisible") !== "false";
+    let pasteImageAsBase64 = localStorage.getItem("mdEditor_pasteImageAsBase64") !== "false";  // 默认开启
 
     // 标题映射表：预览标题元素 ↔ 编辑器行号
     let headingMap = [];
@@ -2233,6 +2398,120 @@ sequenceDiagram
         render();
     }
 
+    /* 流程图模板 */
+    const flowchartTemplates = {
+        basic: `\`\`\`mermaid
+graph TD
+    A[开始] --> B{判断条件}
+    B -->|是| C[执行操作A]
+    B -->|否| D[执行操作B]
+    C --> E[结束]
+    D --> E
+\`\`\``,
+
+        sequence: `\`\`\`mermaid
+sequenceDiagram
+    participant 用户
+    participant 系统
+    participant 数据库
+
+    用户->>系统: 发起请求
+    系统->>数据库: 查询数据
+    数据库-->>系统: 返回结果
+    系统-->>用户: 响应结果
+\`\`\``,
+
+        state: `\`\`\`mermaid
+stateDiagram-v2
+    [*] --> 待处理
+    待处理 --> 处理中: 开始处理
+    处理中 --> 已完成: 处理成功
+    处理中 --> 失败: 处理失败
+    失败 --> 待处理: 重试
+    已完成 --> [*]
+    失败 --> [*]
+\`\`\``,
+
+        class: `\`\`\`mermaid
+classDiagram
+    class Animal {
+        +String name
+        +eat()
+        +sleep()
+    }
+    class Dog {
+        +bark()
+        +fetch()
+    }
+    class Cat {
+        +meow()
+        +scratch()
+    }
+    Animal <|-- Dog
+    Animal <|-- Cat
+\`\`\``,
+
+        gantt: `\`\`\`mermaid
+gantt
+    title 项目开发计划
+    dateFormat  YYYY-MM-DD
+    section 设计阶段
+    需求分析      :a1, 2024-01-01, 7d
+    系统设计      :a2, after a1, 7d
+    section 开发阶段
+    前端开发      :b1, after a2, 14d
+    后端开发      :b2, after a2, 14d
+    section 测试阶段
+    集成测试      :c1, after b1, 7d
+    上线部署      :c2, after c1, 3d
+\`\`\``,
+
+        mindmap: `\`\`\`mermaid
+mindmap
+  root((中心主题))
+    分支1
+      子项1
+      子项2
+    分支2
+      子项3
+      子项4
+    分支3
+      子项5
+      子项6
+\`\`\``,
+
+        er: `\`\`\`mermaid
+erDiagram
+    USER ||--o{ ORDER : places
+    USER {
+        int id PK
+        string name
+        string email
+    }
+    ORDER {
+        int id PK
+        int user_id FK
+        date created_at
+    }
+\`\`\``
+    };
+
+    function insertFlowchart(type) {
+        const template = flowchartTemplates[type];
+        if (!template) return;
+
+        // 使用 execCommand 插入文本，支持撤销
+        editor.focus();
+        const success = document.execCommand('insertText', false, template + '\n');
+
+        // 如果 execCommand 失败，使用传统方式
+        if (!success) {
+            insertTextAtLineStart(template + '\n');
+        }
+
+        render();
+    }
+
     function deleteCurrentLine() {
         const value = editor.value;
         const start = editor.selectionStart;
@@ -2391,15 +2670,6 @@ sequenceDiagram
         } else if (ctrl && shift && e.key === "Q") {
             e.preventDefault();
             quoteAction();
-        } else if (ctrl && shift && e.key === "[") {
-            e.preventDefault();
-            unorderedListAction();
-        } else if (ctrl && shift && e.key === "]") {
-            e.preventDefault();
-            orderedListAction();
-        } else if (ctrl && shift && e.key === "T") {
-            e.preventDefault();
-            tableAction();
         } else if (ctrl && e.key === "d") {
             e.preventDefault();
             deleteCurrentLine();
@@ -2551,13 +2821,9 @@ sequenceDiagram
     if (!isToolbarVisible) {
         document.getElementById("editorToolbar").style.display = "none";
         document.getElementById("previewToolbar").style.display = "none";
-        document.getElementById("settings-toggleToolbar").innerHTML =
-            '<i class="bi bi-caret-down"></i> 工具栏显示';
         resizerTopIcon.className = "bi bi-chevron-down";
         resizerTop.title = "显示工具栏";
     } else {
-        document.getElementById("settings-toggleToolbar").innerHTML =
-            '<i class="bi bi-caret-up"></i> 工具栏隐藏';
         resizerTopIcon.className = "bi bi-chevron-up";
         resizerTop.title = "隐藏工具栏";
     }
@@ -2565,20 +2831,16 @@ sequenceDiagram
     // 初始化状态栏显示状态
     if (!isFootBarVisible) {
         document.querySelectorAll(".foot-bar").forEach(bar => bar.style.display = "none");
-        document.getElementById("settings-toggleFootBar").innerHTML =
-            '<i class="bi bi-caret-up"></i> 状态栏显示';
         resizerBottomIcon.className = "bi bi-chevron-up";
         resizerBottom.title = "显示状态栏";
     } else {
-        document.getElementById("settings-toggleFootBar").innerHTML =
-            '<i class="bi bi-caret-down"></i> 状态栏隐藏';
         resizerBottomIcon.className = "bi bi-chevron-down";
         resizerBottom.title = "隐藏状态栏";
     }
 
     // 初始化同步滚动设置按钮状态
     if (isSyncScroll) {
-        document.getElementById("settings-toggleSyncScroll").dataset.select = "true";
+        document.getElementById("tb-syncScroll").dataset.select = "true";
     }
 
     // 初始化中间区域标题
@@ -2920,23 +3182,20 @@ sequenceDiagram
 
         const editorToolbar = document.getElementById("editorToolbar");
         const previewToolbar = document.getElementById("previewToolbar");
+        const switchEl = document.getElementById("switch-toolbar");
 
         if (isToolbarVisible) {
             editorToolbar.style.display = "";
             previewToolbar.style.display = "";
             resizerTopIcon.className = "bi bi-chevron-up";
             resizerTop.title = "隐藏工具栏";
-            // 更新设置菜单中的按钮文字
-            document.getElementById("settings-toggleToolbar").innerHTML =
-                '<i class="bi bi-caret-up"></i> 工具栏隐藏';
+            switchEl.classList.add("active");
         } else {
             editorToolbar.style.display = "none";
             previewToolbar.style.display = "none";
             resizerTopIcon.className = "bi bi-chevron-down";
             resizerTop.title = "显示工具栏";
-            // 更新设置菜单中的按钮文字
-            document.getElementById("settings-toggleToolbar").innerHTML =
-                '<i class="bi bi-caret-down"></i> 工具栏显示';
+            switchEl.classList.remove("active");
         }
     });
 
@@ -2972,6 +3231,7 @@ sequenceDiagram
         // 同时隐藏/显示编辑器和预览区域的底部状态栏
         const editorFootBar = document.querySelector(".editor-container .foot-bar");
         const previewFootBar = document.querySelector(".preview-wrapper .foot-bar");
+        const switchEl = document.getElementById("switch-footbar");
 
         if (isFootBarHidden) {
             editorFootBar.style.display = "none";
@@ -2979,18 +3239,14 @@ sequenceDiagram
             // 改变图标为向上
             resizerBottomIcon.className = "bi bi-chevron-up";
             resizerBottom.title = "显示状态栏";
-            // 更新设置菜单中的按钮文字
-            document.getElementById("settings-toggleFootBar").innerHTML =
-                '<i class="bi bi-caret-up"></i> 状态栏显示';
+            switchEl.classList.remove("active");
         } else {
             editorFootBar.style.display = "flex";
             previewFootBar.style.display = "flex";
             // 改变图标为向下
             resizerBottomIcon.className = "bi bi-chevron-down";
             resizerBottom.title = "隐藏状态栏";
-            // 更新设置菜单中的按钮文字
-            document.getElementById("settings-toggleFootBar").innerHTML =
-                '<i class="bi bi-caret-down"></i> 状态栏隐藏';
+            switchEl.classList.add("active");
         }
     });
 
@@ -3052,12 +3308,32 @@ sequenceDiagram
     const dragOverlay = document.getElementById('dragOverlay');
     let dragCounter = 0;  // 用于跟踪拖拽进入/离开次数
 
+    // ESC 键处理函数（取消拖拽）
+    function handleDragEscape(e) {
+        if (e.key === 'Escape') {
+            dragCounter = 0;
+            hideDragOverlay();
+        }
+    }
+
+    // 显示 overlay 时添加 ESC 监听
+    function showDragOverlay() {
+        dragOverlay.classList.add('show');
+        document.addEventListener('keydown', handleDragEscape);
+    }
+
+    // 隐藏 overlay 时移除 ESC 监听
+    function hideDragOverlay() {
+        dragOverlay.classList.remove('show');
+        document.removeEventListener('keydown', handleDragEscape);
+    }
+
     // 在 body 上监听拖拽进入事件
     document.body.addEventListener('dragenter', (e) => {
         e.preventDefault();
         e.stopPropagation();
         dragCounter++;
-        dragOverlay.classList.add('show');
+        showDragOverlay();
     });
 
     // 监听拖拽离开事件
@@ -3067,29 +3343,20 @@ sequenceDiagram
         dragCounter--;
         if (dragCounter <= 0) {
             dragCounter = 0;
-            dragOverlay.classList.remove('show');
+            hideDragOverlay();
         }
     });
 
     // 监听拖拽结束（取消拖拽时会触发）
     document.addEventListener('dragend', (e) => {
         dragCounter = 0;
-        dragOverlay.classList.remove('show');
+        hideDragOverlay();
     });
 
     // 监听 drop 事件（拖拽成功放下）
     document.addEventListener('drop', (e) => {
         dragCounter = 0;
-        dragOverlay.classList.remove('show');
-    });
-
-    // 监听 ESC 键（取消拖拽、关闭模态框）
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            dragCounter = 0;
-            dragOverlay.classList.remove('show');
-            hideAboutModal();  // 关闭 About 模态框
-        }
+        hideDragOverlay();
     });
 
     // 在 overlay 上阻止 dragleave
@@ -3108,7 +3375,7 @@ sequenceDiagram
     dragOverlay.addEventListener('drop', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dragOverlay.classList.remove('show');
+        hideDragOverlay();
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -3126,7 +3393,7 @@ sequenceDiagram
     container.addEventListener('drop', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dragOverlay.classList.remove('show');
+        hideDragOverlay();
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -3154,7 +3421,7 @@ sequenceDiagram
         e.stopPropagation();
 
         // 先隐藏拖拽提示层
-        dragOverlay.classList.remove('show');
+        hideDragOverlay();
 
         const file = e.dataTransfer.files[0];
         if (file) {
@@ -3178,21 +3445,32 @@ sequenceDiagram
             // 检查是否为图片
             if (item.type.indexOf("image") !== -1) {
                 e.preventDefault();
+
+                // 检查是否启用了粘贴图片为Base64
+                if (!pasteImageAsBase64) {
+                    showToast('粘贴图片功能已关闭，请在高级设置中开启"粘贴图片为Base64"选项', 'warning');
+                    return;
+                }
+
                 const file = item.getAsFile();
                 const reader = new FileReader();
 
                 reader.onload = function(ev) {
                     const base64 = ev.target.result;
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const value = editor.value;
+                    const imageText = "\n![](" + base64 + ")\n";
 
-                    // 在光标位置插入图片
-                    editor.value = value.substring(0, start) + "\n![](" + base64 + ")\n" + value.substring(end);
-
-                    // 重新定位光标
-                    editor.selectionStart = editor.selectionEnd = start + base64.length + 9;
+                    // 使用 execCommand 插入文本，这样可以支持撤销
                     editor.focus();
+                    const success = document.execCommand('insertText', false, imageText);
+
+                    // 如果 execCommand 失败（某些浏览器可能不支持），则使用传统方式
+                    if (!success) {
+                        const start = editor.selectionStart;
+                        const end = editor.selectionEnd;
+                        const value = editor.value;
+                        editor.value = value.substring(0, start) + imageText + value.substring(end);
+                        editor.selectionStart = editor.selectionEnd = start + imageText.length;
+                    }
 
                     render();
                 };
@@ -3342,6 +3620,19 @@ sequenceDiagram
         }
     }
 
+    /* 更新全屏按钮显示 */
+    function updateFullscreenButton() {
+        const btn = document.getElementById('top-tb-fullscreen');
+        if (document.fullscreenElement) {
+            btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> 退出全屏';
+        } else {
+            btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> 全屏';
+        }
+    }
+
+    // 监听全屏状态变化
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+
     /* 导出图片 */
     function exportImage() {
         showToast('正在生成图片，请稍候...', 'success');
@@ -3443,20 +3734,19 @@ sequenceDiagram
 
         const editorToolbar = document.getElementById("editorToolbar");
         const previewToolbar = document.getElementById("previewToolbar");
+        const switchEl = document.getElementById("switch-toolbar");
 
         if (isToolbarVisible) {
             editorToolbar.style.display = "";
             previewToolbar.style.display = "";
-            document.getElementById("settings-toggleToolbar").innerHTML =
-                '<i class="bi bi-caret-up"></i> 工具栏隐藏';
+            switchEl.classList.add("active");
             // 更新分隔条顶部按钮图标和标题
             resizerTopIcon.className = "bi bi-chevron-up";
             resizerTop.title = "隐藏工具栏";
         } else {
             editorToolbar.style.display = "none";
             previewToolbar.style.display = "none";
-            document.getElementById("settings-toggleToolbar").innerHTML =
-                '<i class="bi bi-caret-down"></i> 工具栏显示';
+            switchEl.classList.remove("active");
             // 更新分隔条顶部按钮图标和标题
             resizerTopIcon.className = "bi bi-chevron-down";
             resizerTop.title = "显示工具栏";
@@ -3469,17 +3759,16 @@ sequenceDiagram
         localStorage.setItem("mdEditor_footBarVisible", isFootBarVisible ? "true" : "false");
 
         const footBars = document.querySelectorAll(".foot-bar");
+        const switchEl = document.getElementById("switch-footbar");
 
         if (isFootBarVisible) {
-            footBars.forEach(bar => bar.style.display = "");
-            document.getElementById("settings-toggleFootBar").innerHTML =
-                '<i class="bi bi-caret-down"></i> 状态栏隐藏';
+            footBars.forEach(bar => bar.style.display = "flex");
+            switchEl.classList.add("active");
             // 更新分隔条底部按钮图标
             resizerBottomIcon.className = "bi bi-chevron-down";
         } else {
             footBars.forEach(bar => bar.style.display = "none");
-            document.getElementById("settings-toggleFootBar").innerHTML =
-                '<i class="bi bi-caret-up"></i> 状态栏显示';
+            switchEl.classList.remove("active");
             // 更新分隔条底部按钮图标
             resizerBottomIcon.className = "bi bi-chevron-up";
         }
@@ -3494,14 +3783,25 @@ sequenceDiagram
         const syncScrollBtn = document.getElementById("tb-syncScroll");
         syncScrollBtn.dataset.select = isSyncScroll ? "true" : "false";
 
-        // 更新设置菜单中的按钮状态
-        const settingBtn = document.getElementById("settings-toggleSyncScroll");
+        // 更新开关状态
+        const switchEl = document.getElementById("sync-scroll");
         if (isSyncScroll) {
-            settingBtn.innerHTML = '<i class="bi bi-arrows-vertical"></i> 同步滚动';
-            settingBtn.dataset.select = "true";
+            switchEl.classList.add("active");
         } else {
-            settingBtn.innerHTML = '<i class="bi bi-arrows-vertical"></i> 同步滚动';
-            delete settingBtn.dataset.select;
+            switchEl.classList.remove("active");
+        }
+    }
+
+    /* 切换粘贴图片为Base64 */
+    function togglePasteImageAsBase64() {
+        pasteImageAsBase64 = !pasteImageAsBase64;
+        localStorage.setItem("mdEditor_pasteImageAsBase64", pasteImageAsBase64 ? "true" : "false");
+
+        const switchEl = document.getElementById("paste-image-base64");
+        if (pasteImageAsBase64) {
+            switchEl.classList.add("active");
+        } else {
+            switchEl.classList.remove("active");
         }
     }
 
@@ -3530,6 +3830,44 @@ sequenceDiagram
         }
     }
 
+    /* 初始化开关状态 */
+    function initializeSwitches() {
+        // 初始化工具栏开关
+        const toolbarSwitch = document.getElementById("switch-toolbar");
+        if (isToolbarVisible) {
+            toolbarSwitch.classList.add("active");
+        } else {
+            toolbarSwitch.classList.remove("active");
+        }
+
+        // 初始化状态栏开关
+        const footbarSwitch = document.getElementById("switch-footbar");
+        if (isFootBarVisible) {
+            footbarSwitch.classList.add("active");
+        } else {
+            footbarSwitch.classList.remove("active");
+        }
+
+        // 初始化同步滚动开关
+        const syncScrollSwitch = document.getElementById("sync-scroll");
+        if (isSyncScroll) {
+            syncScrollSwitch.classList.add("active");
+        } else {
+            syncScrollSwitch.classList.remove("active");
+        }
+
+        // 初始化粘贴图片为Base64开关
+        const pasteImageSwitch = document.getElementById("paste-image-base64");
+        if (pasteImageAsBase64) {
+            pasteImageSwitch.classList.add("active");
+        } else {
+            pasteImageSwitch.classList.remove("active");
+        }
+    }
+
+    // 页面加载完成后初始化开关状态
+    initializeSwitches();
+
     /* 显示 About 模态框 */
     function showAboutModal() {
         const modal = document.getElementById('aboutModal');
@@ -3545,6 +3883,13 @@ sequenceDiagram
     // 点击模态框外部关闭
     document.getElementById('aboutModal').addEventListener('click', function(e) {
         if (e.target === this) {
+            hideAboutModal();
+        }
+    });
+
+    // 模态框上监听 ESC 键关闭
+    document.getElementById('aboutModal').addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
             hideAboutModal();
         }
     });
