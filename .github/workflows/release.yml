@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Build offline version
+        run: |
+          echo "检查 build-offline.js 存在性..."
+          if [ ! -f "build-offline.js" ]; then
+            echo "错误: build-offline.js 不存在"
+            exit 1
+          fi
+          node build-offline.js
+          echo "离线版本构建完成"
+
+      - name: Create release package
+        run: |
+          VERSION="${{ github.ref_name }}"
+          ZIP_NAME="web-markdown-editor-offline.zip"
+          RELEASE_DIR="release"
+
+          echo "正在打包 $VERSION..."
+
+          rm -rf "$RELEASE_DIR"
+          mkdir -p "$RELEASE_DIR"
+          cp -r offline/* "$RELEASE_DIR/"
+
+          python3 << 'EOF'
+          import zipfile
+          import os
+
+          zip_path = "web-markdown-editor-offline.zip"
+          release_dir = "release"
+
+          with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+              for root, dirs, files in os.walk(release_dir):
+                  for file in files:
+                      file_path = os.path.join(root, file)
+                      arcname = os.path.relpath(file_path, release_dir)
+                      zipf.write(file_path, arcname)
+          EOF
+
+          rm -rf "$RELEASE_DIR"
+          ls -lh "$ZIP_NAME"
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ github.ref_name }}"
+          cat > release_notes.md << 'EOF'
+          ## 离线版本
+
+          - 所有资源本地化，完全离线运行
+          - 无需网络连接，双击即用
+          - 支持实时预览、语法高亮、数学公式、图表渲染
+          - 新增 DOMPurify XSS 防护
+
+          ## 使用方法
+
+          1. 下载 `web-markdown-editor-offline.zip`
+          2. 解压到任意目录
+          3. 用浏览器打开 `markdown-editor-offline.html`
+          4. 开始使用！
+
+          ## 依赖版本
+
+          | 库名 | 版本 |
+          |------|------|
+          | Marked.js | 12.0.0 |
+          | Highlight.js | 11.9.0 / 11.11.1 (主题) |
+          | KaTeX | 0.16.43 |
+          | Mermaid | 11.13.0 |
+          | html2pdf.js | 0.14.0 |
+          | DOMPurify | 3.2.6 |
+          | Bootstrap | 5.3.8 |
+          | Bootstrap Icons | 1.13.1 |
+          | GitHub Markdown CSS | 5.9.0 |
+          EOF
+
+          echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: web-markdown-editor-offline.zip
+          body_path: release_notes.md
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -164,3 +164,4 @@ out/
 .history/
 sync-status.json
 
+/release
