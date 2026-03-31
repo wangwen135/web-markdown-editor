@@ -27,7 +27,7 @@
 
 直接用浏览器打开 `markdown-editor.html` 即可使用。
 
-**[📥 下载 web-markdown-editor.html](/raw/refs/heads/main/markdown-editor.html)**
+**[📥 下载 web-markdown-editor.html](https://github.com/wangwen135/web-markdown-editor/raw/main/markdown-editor.html)**
 
 ### 离线版本
 
@@ -35,7 +35,7 @@
 
 **使用预打包版本**：
 
-1. **[📥 下载 web-markdown-editor-offline.zip](/releases/download/v1.0.0/web-markdown-editor-offline.zip)**
+1. **[📥 下载 web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.1.0/web-markdown-editor-offline.zip)**
 2. 解压到任意目录
 3. 用浏览器打开 `markdown-editor-offline.html`
 4. 开始使用，无需任何网络连接！
