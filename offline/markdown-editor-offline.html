@@ -2,7 +2,10 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>Web Markdown Editor</title>
+    <title>Web Markdown 编辑器</title>
+    <!-- Favicon: 内联 SVG -->
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' x='.05em' font-size='100'>M</text></svg>">
 
     <!-- Markdown 样式 -->
     <link id="markdownTheme" rel="stylesheet"
@@ -28,6 +31,9 @@
     <!-- PDF -->
     <script src="assets/js/html2pdf.bundle.min.js"></script>
 
+    <!-- DOMPurify - XSS 防护 -->
+    <script src="assets/js/purify.min.js"></script>
+
     <!-- Bootstrap CSS -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -38,9 +44,13 @@
     <script src="assets/js/html2canvas.min.js"></script>
 
     <style>
-        body {
+        html, body {
             margin: 0;
             height: 100vh;
+            overflow: hidden;
+        }
+
+        body {
             display: flex;
             flex-direction: column;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI";
@@ -143,6 +153,15 @@
 
         .editor-area:focus-within {
             border-color: #5d5d5d;
+        }
+
+        /* 深色模式 - 编辑区域边框 */
+        .dark .editor-area {
+            border-color: #30363d;
+        }
+
+        .dark .editor-area:focus-within {
+            border-color: #484f58;
         }
 
         /* 行号 */
@@ -339,16 +358,6 @@
             border-color: #238636;
         }
 
-        /* Bootstrap 工具类 */
-        .ms-auto {
-            margin-left: auto;
-        }
-
-        .mx-1 {
-            margin-left: 4px;
-            margin-right: 4px;
-        }
-
         /* 下拉菜单项样式 */
         .dropdown-item {
             padding: 8px 16px;
@@ -383,19 +392,12 @@
 
         /* 颜色选择器菜单项 */
         .editor-bg-color,
+        #editor-color-dropdown .dropdown-item,
         #tb-color-dropdown .dropdown-item {
             padding: 12px 16px;
             font-size: 14px;
             border: 2px solid transparent;
-            background: transparent;
             transition: border-color 0.2s;
-        }
-
-        /* 颜色选择器hover效果 - 使用边框而不是背景色 */
-        #tb-color-dropdown .dropdown-item:hover,
-        .editor-bg-color:hover {
-            border-color: #228be6 !important;
-            background: transparent !important;
         }
 
         /* 主题选择器菜单项也使用边框hover */
@@ -405,18 +407,6 @@
 
         #theme-dropdown .dropdown-item:hover {
             border-color: #228be6 !important;
-        }
-
-        .text-black-50 {
-            color: rgba(0, 0, 0, 0.5);
-        }
-
-        .d-inline-block {
-            display: inline-block;
-        }
-
-        .d-none {
-            display: none !important;
         }
 
         /* 暗色主题下的文本颜色 */
@@ -467,7 +457,7 @@
             display: flex;
             overflow: hidden;
             position: relative;
-            height: 100vh;
+            min-height: 0;
             width: 100%;
             max-width: 100%;
             margin: 0;
@@ -477,14 +467,71 @@
         .toc {
             width: 220px;
             overflow: auto;
-            border-right: 1px solid #ddd;
-            padding: 10px;
+            padding: 10px 0 10px 10px;
             background: #fafafa;
             flex-shrink: 0;
         }
 
         .toc-hidden {
             display: none !important;
+        }
+
+        /* 目录拖拽手柄容器 */
+        .toc-resizer {
+            width: 4px;
+            flex-shrink: 0;
+            cursor: col-resize;
+            border-left: 1px solid #e8e8e8;
+            border-right: 1px solid #e8e8e8;
+            background: #f5f5f5;
+            transition: background 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .toc-resizer:hover {
+            background: #e8f4ff;
+            border-left-color: #2188ff;
+            border-right-color: #2188ff;
+        }
+
+        .toc-resizer.dragging {
+            cursor: col-resize;
+            background: #d0e6ff;
+            border-left-color: #2188ff;
+            border-right-color: #2188ff;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 深色模式 */
+        .dark .toc-resizer {
+            border-left-color: #30363d;
+            border-right-color: #30363d;
+            background: #161b22;
+        }
+
+        .dark .toc-resizer:hover {
+            background: #1c2128;
+            border-left-color: #58a6ff;
+            border-right-color: #58a6ff;
+        }
+
+        .dark .toc-resizer.dragging {
+            background: #21262d;
+            border-left-color: #58a6ff;
+            border-right-color: #58a6ff;
+        }
+
+        /* 增大拖拽热区 */
+        .toc-resizer::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            right: -3px;
+            top: 0;
+            bottom: 0;
+            cursor: col-resize;
         }
 
         /* 目录项 */
@@ -500,6 +547,26 @@
 
         .toc-item:hover {
             background-color: #eeeeee;
+        }
+
+        /* 目录项选中状态 */
+        .toc-item-active {
+            background-color: #dbeafe !important;
+            color: #0d47a1 !important;
+            font-weight: 500;
+        }
+
+        .dark .toc-item {
+            color: #58a6ff;
+        }
+
+        .dark .toc-item-active {
+            background-color: #1f3d2a !important;
+            color: #58a6ff !important;
+        }
+
+        .dark .toc-item:hover {
+            background-color: #21262d;
         }
 
         /* 目录项图标 - 使用 Bootstrap Icons */
@@ -518,44 +585,60 @@
             color: #9696cb;
         }
 
+        /* H1 - 最大、最粗 */
+        .toc-item[data-level="1"] {
+            font-size: 16px;
+            font-weight: bold;
+        }
         .toc-item[data-level="1"]::before {
             content: "\f5f1"; /* H1 icon */
         }
 
+        /* H2 - 稍小一点 */
+        .toc-item[data-level="2"] {
+            font-size: 15px;
+            font-weight: 600;
+        }
         .toc-item[data-level="2"]::before {
             content: "\f5f2"; /* H2 icon */
             margin-left: 0.5rem;
         }
 
+        /* H3 - 保持原有大小 */
+        .toc-item[data-level="3"] {
+            font-size: 14px;
+            font-weight: 500;
+        }
         .toc-item[data-level="3"]::before {
             content: "\f5f3"; /* H3 icon */
             margin-left: 1rem;
         }
 
+        /* H4 - 稍微小一点 */
+        .toc-item[data-level="4"] {
+            font-size: 13px;
+        }
         .toc-item[data-level="4"]::before {
             content: "\f8dc"; /* H4 icon */
             margin-left: 1.5rem;
         }
 
+        /* H5 - 稍微小一点 */
+        .toc-item[data-level="5"] {
+            font-size: 13px;
+        }
         .toc-item[data-level="5"]::before {
             content: "\f8dd"; /* H5 icon */
             margin-left: 2rem;
         }
 
+        /* H6 - 稍微小一点 */
+        .toc-item[data-level="6"] {
+            font-size: 13px;
+        }
         .toc-item[data-level="6"]::before {
             content: "\f8de"; /* H6 icon */
             margin-left: 2.5rem;
-        }
-
-        .editor {
-            width: 100%;
-            border: none;
-            padding: 16px;
-            resize: none;
-            outline: none;
-            font-family: monospace;
-            flex: 1;
-            overflow: auto;
         }
 
         .preview-wrapper {
@@ -572,6 +655,8 @@
             min-height: 0;
             overflow: auto;
             padding: 0;
+            /* 防止 KaTeX 等渲染内容影响父容器的布局 */
+            contain: layout;
         }
 
         .markdown-body {
@@ -580,16 +665,11 @@
             margin-right: auto;
             font-size: 16px;
             line-height: 1.8;
-            padding: 1rem;
-            background-color: #ffffff;
-        }
-
-        .markdown-content {
-            margin-left: auto;
-            margin-right: auto;
-            min-height: 100%;
-            font-size: 16px;
-            line-height: 1.8;
+            padding: 2rem;
+            /* 左右边框标记内容宽度 */
+            border-left: 1px solid #d0d7de;
+            border-right: 1px solid #d0d7de;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
         }
 
         /* 拖动条容器 */
@@ -599,6 +679,10 @@
             flex-direction: column;
             flex-shrink: 0;
             background: #ddd;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         /* 拖动条顶部按钮 */
@@ -659,13 +743,6 @@
             background: #484f58;
         }
 
-        .resizer-container {
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
         .dark {
             background: #0d1117;
             color: #c9d1d9;
@@ -692,11 +769,10 @@
         }
 
         .dark .markdown-body {
-            background-color: #0d1117;
-        }
-
-        .dark .resizer {
-            background: #30363d;
+            /* 背景色由父容器 .preview-content-wrapper 控制 */
+            /* 深色模式下的内容宽度边框 */
+            border-left-color: #30363d;
+            border-right-color: #30363d;
         }
 
         /* 滚动条样式 - 浅色模式 */
@@ -736,6 +812,32 @@
             background: #161b22;
         }
 
+        /* 目录区域滚动条样式 - 更细 */
+        .toc::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .toc::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .toc::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .toc::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .dark .toc::-webkit-scrollbar-thumb {
+            background: #30363d;
+        }
+
+        .dark .toc::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
         /* 下拉菜单深色样式 */
         .dark .dropdown-menu {
             background: #21262d;
@@ -760,7 +862,7 @@
             padding: 8px 16px;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+            z-index: 10000;
             opacity: 0;
             transition: opacity 0.3s, transform 0.3s;
             font-size: 13px;
@@ -833,6 +935,54 @@
 
         .dark .drag-overlay-text {
             background: rgba(33, 136, 255, 0.95);
+        }
+
+        /* 导出进度遮罩层 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            min-width: 200px;
+        }
+
+        .dark .loading-content {
+            background: #21262d;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 15px;
+        }
+
+        .loading-text {
+            font-size: 16px;
+            color: #24292f;
+            font-weight: 500;
+        }
+
+        .dark .loading-text {
+            color: #c9d1d9;
         }
 
         /* 模态框样式 */
@@ -982,34 +1132,7 @@
             justify-content: center;
         }
 
-        #darkModeBtn i {
-            font-size: 16px;
-        }
-
         /* 主题下拉框 */
-        #themeSelect {
-            font-size: 13px;
-            padding: 4px 8px;
-            border: 1px solid #d0d7de;
-        }
-
-        .dark #themeSelect {
-            border-color: #30363d;
-        }
-
-        /* 下拉菜单active状态 */
-        .dropdown-item.active {
-            background: #e2e3e5;
-        }
-
-        .dark .dropdown-item.active {
-            background: #30363d;
-        }
-
-        #darkModeBtn i {
-            font-size: 16px;
-        }
-
         #themeSelect {
             font-size: 13px;
             padding: 6px 12px;
@@ -1108,11 +1231,20 @@
             color: #8b949e;
         }
 
+        /* 打印样式 */
         @media print {
-            body {
-                background: white;
-                height: auto;
-                overflow: visible;
+            /* 设置打印页面 */
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+
+            html, body {
+                background: white !important;
+                height: auto !important;
+                overflow: visible !important;
+                font-size: 16px !important;
+                line-height: 1.8 !important;
             }
 
             /* 隐藏不需要打印的元素 */
@@ -1131,59 +1263,64 @@
             #toast,
             .foot-bar,
             .modal,
-            #dragOverlay {
+            #dragOverlay,
+            #findReplacePanel,
+            .context-menu,
+            .tooltip {
                 display: none !important;
             }
 
-            /* 隐藏编辑器部分 */
-            .editor-area,
-            #editorToolbar,
-            .editor-toolbar {
-                display: none !important;
-            }
-
-            /* 显示预览内容 */
-            .preview-content-wrapper {
+            /* container 需要显示但移除 overflow 限制 */
+            .container {
                 display: block !important;
+                overflow: visible !important;
+                height: auto !important;
+                min-height: 0 !important;
+            }
+
+            /* 只显示预览区域 */
+            .preview-wrapper {
+                display: block !important;
+                position: static !important;
+                width: auto !important;
+                max-width: none !important;
+                height: auto !important;
                 overflow: visible !important;
             }
 
-            .container {
-                display: block;
-                height: auto;
-                overflow: visible;
-                width: 100%;
+            .preview-content-wrapper {
+                display: block !important;
+                width: auto !important;
+                max-width: none !important;
+                height: auto !important;
+                overflow: visible !important;
             }
 
-            .preview-wrapper {
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                height: auto;
-                overflow: visible;
-                display: block;
-                border: none;
-                flex-direction: column;
-            }
-
-            #previewToolbar {
-                display: none !important;
-            }
-
-            .markdown-body {
-                max-width: 100%;
-                padding: 20px;
-                height: auto;
-                overflow: visible;
-                margin: 0;
+            /* 强制使用固定宽度，忽略 S/M/L 设置 */
+            #preview {
+                max-width: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
                 background: white !important;
+                color: black !important;
+                border: none !important;
             }
 
-            .markdown-content {
-                margin: 0;
-                padding: 0;
+            /* markdown-body 打印样式 */
+            .markdown-body {
+                font-size: 16px !important;
+                line-height: 1.8 !important;
+                padding: 20px !important;
+                max-width: none !important;
+                background: white !important;
+                color: black !important;
+                border: none !important;
             }
 
+            /* 避免分页断行 */
             h1, h2, h3, h4, h5, h6 {
                 page-break-after: avoid;
             }
@@ -1192,8 +1329,14 @@
                 page-break-inside: avoid;
             }
 
-            table, img {
+            table, img, .mermaid {
                 page-break-inside: avoid;
+            }
+
+            /* 确保长内容完整打印 */
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
             }
         }
 
@@ -1271,15 +1414,216 @@
             background-color: #343a40;
         }
 
-        /* 恢复所有下拉菜单中按钮的 hover 效果 */
-        .dropdown-menu .btn.dropdown-item:hover,
-        .dropdown-menu .btn-control.dropdown-item:hover {
+        /* 恢复所有下拉菜单中按钮的 hover 效果（排除颜色选择器） */
+        .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn.dropdown-item:hover,
+        .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn-control.dropdown-item:hover {
             background-color: #e9ecef !important;
         }
 
-        .dark .dropdown-menu .btn.dropdown-item:hover,
-        .dark .dropdown-menu .btn-control.dropdown-item:hover {
+        .dark .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn.dropdown-item:hover,
+        .dark .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn-control.dropdown-item:hover {
             background-color: #343a40 !important;
+        }
+
+        /* 颜色选择器 hover - 只显示边框 */
+        #editor-color-dropdown .dropdown-item:hover,
+        #tb-color-dropdown .dropdown-item:hover {
+            border-color: #228be6 !important;
+        }
+
+        /* 查找替换浮动面板样式 */
+        #findReplacePanel {
+            display: none;
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 400px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            cursor: move;
+        }
+
+        .dark #findReplacePanel {
+            background: #161b22;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #findReplacePanel.show {
+            display: block;
+        }
+
+        #findReplacePanel .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+            background: #f6f8fa;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dark #findReplacePanel .panel-header {
+            background: #21262d;
+            border-bottom-color: #30363d;
+        }
+
+        #findReplacePanel .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #24292f;
+        }
+
+        .dark #findReplacePanel .panel-title {
+            color: #c9d1d9;
+        }
+
+        #findReplacePanel .panel-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            line-height: 1;
+            color: #666;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        #findReplacePanel .panel-close:hover {
+            color: #333;
+        }
+
+        .dark #findReplacePanel .panel-close {
+            color: #8b949e;
+        }
+
+        .dark #findReplacePanel .panel-close:hover {
+            color: #c9d1d9;
+        }
+
+        #findReplacePanel .panel-body {
+            padding: 16px;
+        }
+
+        #findReplacePanel .find-replace-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            justify-content: space-between;
+        }
+
+        #findReplacePanel .find-replace-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #findReplacePanel .find-replace-row:last-child {
+            margin-bottom: 0;
+        }
+
+        #findReplacePanel .find-replace-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .dark #findReplacePanel .find-replace-input {
+            background: #0d1117;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+
+        #findReplacePanel .find-replace-input:focus {
+            outline: none;
+            border-color: #228be6;
+            box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1);
+        }
+
+        #findReplacePanel .find-replace-btn {
+            padding: 8px 14px;
+            font-size: 13px;
+            border: 1px solid #d0d7de;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .dark #findReplacePanel .find-replace-btn {
+            background: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+
+        #findReplacePanel .find-replace-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .dark #findReplacePanel .find-replace-btn:hover {
+            background: #30363d;
+        }
+
+        #findReplacePanel .find-replace-btn.primary {
+            background: #228be6;
+            color: white;
+            border-color: #228be6;
+        }
+
+        #findReplacePanel .find-replace-btn.primary:hover {
+            background: #1c7ed6;
+        }
+
+        #findReplacePanel .find-replace-info {
+            color: #666;
+            font-size: 13px;
+            white-space: nowrap;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .dark #findReplacePanel .find-replace-info {
+            color: #8b949e;
+        }
+
+        #findReplacePanel .find-replace-shortcuts {
+            display: flex;
+            gap: 2px;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .dark #findReplacePanel .find-replace-shortcuts {
+            color: #8b949e;
+        }
+
+        #findReplacePanel .find-replace-shortcuts span {
+            font-family: Consolas, monospace;
+            background: #f1f3f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .dark #findReplacePanel .find-replace-shortcuts span {
+            background: #30363d;
+        }
+
+        #findReplacePanel .find-replace-message {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+            min-height: 18px;
+        }
+
+        .dark #findReplacePanel .find-replace-message {
+            color: #8b949e;
         }
     </style>
 </head>
@@ -1291,6 +1635,16 @@
 <div id="dragOverlay" class="drag-overlay">
     <div class="drag-overlay-text">
         <i class="bi bi-file-earmark-markdown"></i> 拖放 Markdown 文件到这里打开
+    </div>
+</div>
+
+<!-- 导出进度遮罩层 -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner-border text-primary loading-spinner" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="loading-text" id="loadingText">正在导出，请稍候...</div>
     </div>
 </div>
 
@@ -1328,7 +1682,7 @@ MIT License
                 <a href="https://github.com/wangwen135/web-markdown-editor" target="_blank" class="btn btn-primary">
                     <i class="bi bi-github"></i> GitHub
                 </a>
-                <button type="button" class="btn btn-secondary" onclick="hideAboutModal()">关闭</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
             </div>
         </div>
     </div>
@@ -1441,23 +1795,35 @@ MIT License
     </div>
 </div>
 
-<div class="container">
-    <div class="toc" id="toc"></div>
+<!-- 查找替换浮动面板 -->
+<div id="findReplacePanel" tabindex="0">
+    <div class="panel-header" id="findReplacePanelHeader">
+        <span class="panel-title"><i class="bi bi-search"></i> 查找和替换</span>
+        <button class="panel-close" onclick="closeFindReplacePanel()">&times;</button>
+    </div>
+    <div class="panel-body">
+        <div class="find-replace-row">
+            <input type="text" id="find-input" class="find-replace-input" placeholder="查找内容" aria-label="查找内容">
+            <button class="find-replace-btn" onclick="findPrevious()" title="上一个 (Shift+F3)">◀</button>
+            <button class="find-replace-btn" onclick="findNext()" title="下一个 (F3)">▶</button>
+        </div>
+        <div class="find-replace-row">
+            <span class="find-replace-info">第 <span id="find-current">0</span> 个/共 <span id="find-total">0</span> 个</span>
+        </div>
+        <div class="find-replace-row">
+            <input type="text" id="replace-input" class="find-replace-input" placeholder="替换为" aria-label="替换为">
+            <button class="find-replace-btn" onclick="replaceCurrent()">替换</button>
+            <button class="find-replace-btn" onclick="replaceAll()">全部替换</button>
+        </div>
+        <div class="find-replace-message" id="find-replace-message"></div>
+    </div>
+</div>
 
-<script>
-    /* 防抖函数 */
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-</script>
+<div class="container">
+    <div class="toc" id="toc" aria-label="目录"></div>
+
+    <!-- 目录拖拽手柄 -->
+    <div class="toc-resizer" id="tocResizer" title="拖拽调整目录宽度"></div>
 
     <div class="editor-container">
         <!--编辑工具栏-->
@@ -1667,10 +2033,129 @@ MIT License
             </div>
         </div>
         <div class="editor-area">
-            <div class="line-numbers" id="lineNumbers">
+            <div class="line-numbers" id="lineNumbers" aria-hidden="true">
                 <span class="selected">1</span>
             </div>
-            <textarea id="editor" class="editor"># Markdown 编辑器 - 功能演示
+            <textarea id="editor" class="editor" aria-label="Markdown 编辑器"></textarea>
+        </div>
+        <div class="foot-bar">
+            <span>字符：<b id="charCount">0</b></span>
+            <span>行数：<b id="lineCount">0</b></span>
+            <span>光标：<b id="cursorLine">0</b> 行 <b id="cursorCol">0</b> 列</span>
+        </div>
+    </div>
+
+    <!-- 拖动条 -->
+    <div class="resizer-container">
+        <!-- 顶部按钮：隐藏工具栏 -->
+        <div class="resizer-top" id="resizerTop" title="隐藏工具栏" role="separator" tabindex="0" aria-label="隐藏工具栏">
+            <i class="bi bi-chevron-up" id="resizerTopIcon"></i>
+        </div>
+        <!-- 中间点击区域：折叠/展开预览 -->
+        <div class="resizer-mid" id="resizerMid" title="折叠/展开预览区域" role="separator" tabindex="0" aria-label="折叠或展开预览区域"></div>
+        <!-- 底部按钮：隐藏状态栏 -->
+        <div class="resizer-bottom" id="resizerBottom" title="隐藏状态栏" role="separator" tabindex="0" aria-label="隐藏状态栏">
+            <i class="bi bi-chevron-down" id="resizerBottomIcon"></i>
+        </div>
+    </div>
+
+    <div class="preview-wrapper">
+        <!--预览工具栏-->
+        <div id="previewToolbar" class="editor-preview-toolbar">
+            <button id="p-tb-small" class="btn btn-control btn-p-sm ms-auto"
+                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 较窄">
+                <span class="letter-icon">S</span>
+            </button>
+            <button id="p-tb-middle" class="btn btn-control btn-p-sm" data-select="true"
+                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 中等">
+                <span class="letter-icon">M</span>
+            </button>
+            <button id="p-tb-large" class="btn btn-control btn-p-sm"
+                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 较宽">
+                <span class="letter-icon">L</span>
+            </button>
+            <button id="p-tb-full" class="btn btn-control btn-p-sm"
+                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 拉满">
+                <span class="letter-icon">F</span>
+            </button>
+
+            <!--分隔-->
+            <span class="text-black-50 mx-1">|</span>
+
+            <!--背景颜色下拉框-->
+            <div class="dropdown d-inline-block">
+                <div data-bs-toggle="dropdown" aria-expanded="false">
+                    <button id="p-tb-bgColor" class="btn btn-control btn-p-sm dropdown-toggle"
+                            data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="right" title="背景颜色">
+                        <i class="bi bi-palette"></i>
+                    </button>
+                </div>
+
+                <ul id="tb-color-dropdown" class="dropdown-menu max-w-200px">
+                    <!-- 动态生成颜色选项 -->
+                </ul>
+            </div>
+
+            <!--同步滚动-->
+            <button id="tb-syncScroll" class="btn btn-control btn-p-sm ms-auto sync-scrolling-icon"
+                    data-select="true" data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="同步滚动">
+                <i class="bi bi-arrows-vertical"></i>
+            </button>
+        </div>
+
+        <!-- 预览内容容器 -->
+        <div class="preview-content-wrapper">
+            <article id="preview" class="markdown-body"></article>
+        </div>
+
+        <!-- 预览底部状态栏 -->
+        <div class="foot-bar">
+            <span>标题：<b id="headCount">0</b></span>
+            <span>段落：<b id="paraCount">0</b></span>
+            <span>代码块：<b id="codeCount">0</b></span>
+            <span>图片：<b id="imgCount">0</b></span>
+        </div>
+    </div>
+</div>
+<script>
+    /* 防抖函数 */
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    /* 节流函数 - 用于滚动事件，保证流畅性 */
+    function throttle(func, limit) {
+        let inThrottle;
+        let lastArgs;
+        return function executedFunction(...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => {
+                    inThrottle = false;
+                    if (lastArgs) {
+                        func.apply(this, lastArgs);
+                        lastArgs = null;
+                    }
+                }, limit);
+            } else {
+                lastArgs = args;
+            }
+        };
+    }
+
+    mermaid.initialize({startOnLoad: false});
+
+    // 编辑器默认内容
+    const DEFAULT_CONTENT = `# Markdown 编辑器 - 功能演示
 
 欢迎使用 Markdown 编辑器！本文档展示了各种 Markdown 语法和编辑器功能。
 
@@ -1724,19 +2209,19 @@ MIT License
 ## 💻 代码
 
 ### 行内代码
-这是一段 `inline code` 代码。
+这是一段 \`inline code\` 代码。
 
 ### 代码块
-```javascript
+\`\`\`javascript
 function hello() {
     console.log("Hello, World!");
 }
-```
+\`\`\`
 
-```python
+\`\`\`python
 def hello():
     print("Hello, Python!")
-```
+\`\`\`
 
 ## 📐 数学公式
 
@@ -1746,34 +2231,34 @@ def hello():
 
 方式一（推荐）：
 $$
-\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}
 $$
 
 方式二：
 $$
-\sum_{i=1}^{n} i = \frac{n(n+1)}{2}
+\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}
 $$
 
 ## 📈 Mermaid 图表
 
 ### 流程图
-```mermaid
+\`\`\`mermaid
 graph TD
     A[开始] --> B{判断}
     B -->|是| C[执行操作A]
     B -->|否| D[执行操作B]
     C --> E[结束]
     D --> E
-```
+\`\`\`
 
 ### 时序图
-```mermaid
+\`\`\`mermaid
 sequenceDiagram
     participant 用户
     participant 系统
     用户->>系统: 发送请求
     系统-->>用户: 返回响应
-```
+\`\`\`
 
 ## 🔤 分隔线
 
@@ -1785,27 +2270,27 @@ sequenceDiagram
 编辑器会自动保存内容到浏览器本地存储，刷新页面不会丢失内容。
 
 ### 拖拽打开文件
-支持将 `.md` 文件直接拖拽到页面中打开编辑，非常方便快速查看和编辑文件。
+支持将 \`.md\` 文件直接拖拽到页面中打开编辑，非常方便快速查看和编辑文件。
 
 **文件名标记：**
-- 拖拽打开的文件会显示 `（拖入）` 标记，如 `document.md （拖入）`
+- 拖拽打开的文件会显示 \`（拖入）\` 标记，如 \`document.md （拖入）\`
 - 文件内容可正常编辑，该标记仅用于区分打开方式
 
 **保存流程：**
-1. **首次保存**（按 `Ctrl+S`）：
+1. **首次保存**（按 \`Ctrl+S\`）：
    - 弹出保存位置选择对话框
-   - 自动填入原文件名（如 `document.md`）
+   - 自动填入原文件名（如 \`document.md\`）
    - 选择保存位置后确认
 
 2. **后续保存**：
-   - 直接按 `Ctrl+S` 即可保存
+   - 直接按 \`Ctrl+S\` 即可保存
    - 无需重复选择位置
    - 自动保存到首次选择的位置
 
 **与"打开"按钮的区别：**
 | 打开方式 | 首次保存 | 后续保存 | 文件名标记 |
 |---------|---------|---------|-----------|
-| 拖拽打开 | 需选择位置 | 直接保存 | `（拖入）` |
+| 拖拽打开 | 需选择位置 | 直接保存 | \`（拖入）\` |
 | 打开按钮 | 无需选择 | 直接保存 | 无标记 |
 
 **浏览器限制说明：**
@@ -1813,20 +2298,22 @@ sequenceDiagram
 
 ### 快捷键
 #### 文本格式
-- `Ctrl+B`: 粗体
-- `Ctrl+I`: 斜体
-- `Ctrl+U`: 下划线
-- `Ctrl+Shift+S`: 删除线
+- \`Ctrl+B\`: 粗体
+- \`Ctrl+I\`: 斜体
+- \`Ctrl+U\`: 下划线
+- \`Ctrl+Shift+S\`: 删除线
 
 #### 标题和引用
-- `Ctrl+1` ~ `Ctrl+6`: 插入 1-6 级标题
-- `Ctrl+Shift+Q`: 引用
+- \`Ctrl+1\` ~ \`Ctrl+6\`: 插入 1-6 级标题
+- \`Ctrl+Shift+Q\`: 引用
 
 #### 编辑操作
-- `Ctrl+S`: 保存文件
-- `Ctrl+D`: 删除当前行
-- `Ctrl+Z`: 撤销
-- `Ctrl+Y` 或 `Ctrl+Shift+Z`: 重做
+- \`Ctrl+F\`: 打开查找
+- \`Ctrl+H\`: 打开查找和替换
+- \`Ctrl+S\`: 保存文件
+- \`Ctrl+D\`: 删除当前行
+- \`Ctrl+Z\`: 撤销
+- \`Ctrl+Y\` 或 \`Ctrl+Shift+Z\`: 重做
 
 #### 其他功能
 - 粘贴图片自动转换为 Base64 格式（可在高级设置中关闭）
@@ -1847,90 +2334,35 @@ sequenceDiagram
 - 点击 🌙/☀️ 按钮切换深色/浅色模式
 - 独立于主题，可与任意主题组合
 - 界面颜色、背景色选项会自动适配
+`;
 
-            </textarea>
-        </div>
-        <div class="foot-bar">
-            <span>字符：<b id="charCount">0</b></span>
-            <span>行数：<b id="lineCount">0</b></span>
-            <span>光标：<b id="cursorLine">0</b> 行 <b id="cursorCol">0</b> 列</span>
-        </div>
-    </div>
-
-    <!-- 拖动条 -->
-    <div class="resizer-container">
-        <!-- 顶部按钮：隐藏工具栏 -->
-        <div class="resizer-top" id="resizerTop" title="隐藏工具栏">
-            <i class="bi bi-chevron-up" id="resizerTopIcon"></i>
-        </div>
-        <!-- 中间点击区域：折叠/展开预览 -->
-        <div class="resizer-mid" id="resizerMid" title="折叠/展开预览区域"></div>
-        <!-- 底部按钮：隐藏状态栏 -->
-        <div class="resizer-bottom" id="resizerBottom" title="隐藏状态栏">
-            <i class="bi bi-chevron-down" id="resizerBottomIcon"></i>
-        </div>
-    </div>
-
-    <div class="preview-wrapper">
-        <!--预览工具栏-->
-        <div id="previewToolbar" class="editor-preview-toolbar">
-            <button id="p-tb-small" class="btn btn-control btn-p-sm ms-auto"
-                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 较窄">
-                <span class="letter-icon">S</span>
-            </button>
-            <button id="p-tb-middle" class="btn btn-control btn-p-sm" data-select="true"
-                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 中等">
-                <span class="letter-icon">M</span>
-            </button>
-            <button id="p-tb-large" class="btn btn-control btn-p-sm"
-                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 较宽">
-                <span class="letter-icon">L</span>
-            </button>
-            <button id="p-tb-full" class="btn btn-control btn-p-sm"
-                    data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="宽度 拉满">
-                <span class="letter-icon">F</span>
-            </button>
-
-            <!--分隔-->
-            <span class="text-black-50 mx-1">|</span>
-
-            <!--背景颜色下拉框-->
-            <div class="dropdown d-inline-block">
-                <div data-bs-toggle="dropdown" aria-expanded="false">
-                    <button id="p-tb-bgColor" class="btn btn-control btn-p-sm dropdown-toggle"
-                            data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="right" title="背景颜色">
-                        <i class="bi bi-palette"></i>
-                    </button>
-                </div>
-
-                <ul id="tb-color-dropdown" class="dropdown-menu max-w-200px">
-                    <!-- 动态生成颜色选项 -->
-                </ul>
-            </div>
-
-            <!--同步滚动-->
-            <button id="tb-syncScroll" class="btn btn-control btn-p-sm ms-auto sync-scrolling-icon"
-                    data-select="true" data-bs-toggle="tooltip" data-bs-custom-class="custom-tooltip" data-bs-placement="bottom" title="同步滚动">
-                <i class="bi bi-arrows-vertical"></i>
-            </button>
-        </div>
-
-        <!-- 预览内容容器 -->
-        <div class="preview-content-wrapper">
-            <article id="preview" class="markdown-body markdown-content"></article>
-        </div>
-
-        <!-- 预览底部状态栏 -->
-        <div class="foot-bar">
-            <span>标题：<b id="headCount">0</b></span>
-            <span>段落：<b id="paraCount">0</b></span>
-            <span>代码块：<b id="codeCount">0</b></span>
-            <span>图片：<b id="imgCount">0</b></span>
-        </div>
-    </div>
-</div>
-<script>
-    mermaid.initialize({startOnLoad: false});
+    // localStorage 工具对象
+    const Storage = {
+        PREFIX: 'mdEditor_',
+        get(key, defaultValue = null) {
+            const value = localStorage.getItem(this.PREFIX + key);
+            return value !== null ? value : defaultValue;
+        },
+        set(key, value) {
+            try {
+                localStorage.setItem(this.PREFIX + key, value);
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('localStorage 配额已满，无法保存:', key);
+                } else {
+                    throw e;
+                }
+            }
+        },
+        getBool(key, defaultVal = false) {
+            const val = this.get(key);
+            if (val === null) return defaultVal;
+            return val === 'true';
+        },
+        setBool(key, value) {
+            this.set(key, value ? 'true' : 'false');
+        }
+    };
 
     const editor = document.getElementById("editor");
     const preview = document.getElementById("preview");
@@ -1938,14 +2370,26 @@ sequenceDiagram
     const toc = document.getElementById("toc");
 
     let currentMode = "edit";
-    let isTOCVisible = localStorage.getItem("mdEditor_tocVisible") !== "false";  // 默认开启
+    let isTOCVisible = Storage.getBool('tocVisible', true);
     let currentFileHandle = null;
-    let isSyncScroll = localStorage.getItem("mdEditor_syncScroll") !== "false";  // 默认开启
+    let isSyncScroll = Storage.getBool('syncScroll', true);
     let lineNumberCounter = 1;
     let selectedLineNumber = 1;
+    // 目录高亮缓存状态
+    let lastActiveTOCIndex = -1;
+    let tocUpdatePending = false;
     let draggedFileName = null;  // 拖拽打开的文件名（无写权限）
-    let currentTheme = localStorage.getItem("mdEditor_theme") || "github";  // 当前主题
-    let isDarkMode = localStorage.getItem("mdEditor_darkMode") === "true";  // 深色模式
+    let currentTheme = Storage.get('theme', 'github');
+    let isDarkMode = Storage.getBool('darkMode', false);
+
+    // 目录宽度拖拽相关
+    let isTOCResizing = false;
+    let tocResizeStartX = 0;
+    let tocResizeStartWidth = 0;
+    const TOC_MIN_WIDTH = 150;
+    const TOC_MAX_WIDTH = 500;
+    const TOC_DEFAULT_WIDTH = 220;
+    let currentTOCWidth = parseInt(Storage.get('tocWidth', TOC_DEFAULT_WIDTH.toString()));
 
     // 主题配置
     const themes = {
@@ -2019,12 +2463,15 @@ sequenceDiagram
     ];
 
     // 工具栏和状态栏显示状态
-    let isToolbarVisible = localStorage.getItem("mdEditor_toolbarVisible") !== "false";
-    let isFootBarVisible = localStorage.getItem("mdEditor_footBarVisible") !== "false";
-    let pasteImageAsBase64 = localStorage.getItem("mdEditor_pasteImageAsBase64") !== "false";  // 默认开启
+    let isToolbarVisible = Storage.getBool('toolbarVisible', true);
+    let isFootBarVisible = Storage.getBool('footBarVisible', true);
+    let pasteImageAsBase64 = Storage.getBool('pasteImageAsBase64', true);
 
     // 标题映射表：预览标题元素 ↔ 编辑器行号
     let headingMap = [];
+
+    // 块级元素滚动映射表：预览块级元素 ↔ 编辑器行号（用于同步滚动）
+    let scrollMap = [];
 
     // 获取行号元素
     const lineNumbers = document.getElementById("lineNumbers");
@@ -2045,6 +2492,7 @@ sequenceDiagram
     // 初始化 Bootstrap Tooltips
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
         new bootstrap.Tooltip(el, {
+            trigger: 'hover',
             delay: {show: 500, hide: 100},
             html: true
         });
@@ -2103,15 +2551,18 @@ sequenceDiagram
 
                 // 保存到对应的主题存储
                 if (isDark) {
-                    localStorage.setItem("mdEditor_bgColor_dark", color);
+                    Storage.set('bgColor_dark', color);
                 } else {
-                    localStorage.setItem("mdEditor_bgColor_light", color);
+                    Storage.set('bgColor_light', color);
                 }
 
                 // 应用颜色
                 const editorTextarea = document.getElementById("editor");
-                const lineNumbers = document.getElementById("lineNumbers");
+                const lineNumEl = document.getElementById("lineNumbers");
                 const bgColorBtn = document.getElementById("tb-bgColor");
+
+                editorTextarea.style.backgroundColor = color;
+                lineNumEl.style.backgroundColor = color;
 
                 editorTextarea.style.backgroundColor = color;
                 lineNumbers.style.backgroundColor = color;
@@ -2128,11 +2579,10 @@ sequenceDiagram
         generatePreviewColorOptions(isDark);
 
         // 应用保存的颜色
-        const colorKey = isDark ? "mdEditor_previewBgColor_dark" : "mdEditor_previewBgColor_light";
-        const savedColor = localStorage.getItem(colorKey);
+        const colorKey = isDark ? "previewBgColor_dark" : "previewBgColor_light";
+        const savedColor = Storage.get(colorKey);
 
         if (savedColor !== null) {
-            const preview = document.getElementById("preview");
             const bgColorBtn = document.getElementById("p-tb-bgColor");
 
             preview.style.backgroundColor = savedColor;
@@ -2140,9 +2590,9 @@ sequenceDiagram
         }
     }
 
-    /* 动态生成编辑器颜色选项 */
-    function generateEditorColorOptions(isDark) {
-        const dropdown = document.getElementById('editor-color-dropdown');
+    /* 动态生成颜色选项（通用函数） */
+    function generateColorOptions(dropdownId, buttonClass, isDark) {
+        const dropdown = document.getElementById(dropdownId);
         dropdown.innerHTML = '';  // 清空现有选项
 
         const colors = isDark ? darkThemeColors : lightThemeColors;
@@ -2151,12 +2601,12 @@ sequenceDiagram
             const li = document.createElement('li');
             const button = document.createElement('button');
 
-            button.className = 'btn btn-control btn-p-sm dropdown-item editor-bg-color';
+            button.className = `btn btn-control btn-p-sm dropdown-item ${buttonClass}`;
             if (colorItem.bootstrapClass) {
                 button.classList.add(colorItem.bootstrapClass);
             }
             if (colorItem.color && !colorItem.bootstrapClass) {
-                button.style.backgroundColor = colorItem.color;
+                button.style.setProperty('background-color', colorItem.color, 'important');
             }
 
             button.textContent = colorItem.name;
@@ -2167,31 +2617,14 @@ sequenceDiagram
         });
     }
 
+    /* 动态生成编辑器颜色选项 */
+    function generateEditorColorOptions(isDark) {
+        generateColorOptions('editor-color-dropdown', 'editor-bg-color', isDark);
+    }
+
     /* 动态生成预览颜色选项 */
     function generatePreviewColorOptions(isDark) {
-        const dropdown = document.getElementById('tb-color-dropdown');
-        dropdown.innerHTML = '';  // 清空现有选项
-
-        const colors = isDark ? darkThemeColors : lightThemeColors;
-
-        colors.forEach(colorItem => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-
-            button.className = 'btn btn-control btn-p-sm dropdown-item preview-bg-color';
-            if (colorItem.bootstrapClass) {
-                button.classList.add(colorItem.bootstrapClass);
-            }
-            if (colorItem.color && !colorItem.bootstrapClass) {
-                button.style.backgroundColor = colorItem.color;
-            }
-
-            button.textContent = colorItem.name;
-            button.dataset.color = colorItem.color;
-
-            li.appendChild(button);
-            dropdown.appendChild(li);
-        });
+        generateColorOptions('tb-color-dropdown', 'preview-bg-color', isDark);
     }
 
     /* 初始化编辑器背景颜色 */
@@ -2202,16 +2635,16 @@ sequenceDiagram
         generateEditorColorOptions(isDark);
 
         // 应用保存的颜色
-        const colorKey = isDark ? "mdEditor_bgColor_dark" : "mdEditor_bgColor_light";
-        const savedColor = localStorage.getItem(colorKey);
+        const colorKey = isDark ? "bgColor_dark" : "bgColor_light";
+        const savedColor = Storage.get(colorKey);
 
         if (savedColor !== null) {
             const editorTextarea = document.getElementById("editor");
-            const lineNumbers = document.getElementById("lineNumbers");
+            const lineNumEl = document.getElementById("lineNumbers");
             const bgColorBtn = document.getElementById("tb-bgColor");
 
             editorTextarea.style.backgroundColor = savedColor;
-            lineNumbers.style.backgroundColor = savedColor;
+            lineNumEl.style.backgroundColor = savedColor;
             bgColorBtn.style.backgroundColor = savedColor || "";
         }
     }
@@ -2241,13 +2674,12 @@ sequenceDiagram
 
                 // 保存到对应的主题存储
                 if (isDark) {
-                    localStorage.setItem("mdEditor_previewBgColor_dark", color);
+                    Storage.set('previewBgColor_dark', color);
                 } else {
-                    localStorage.setItem("mdEditor_previewBgColor_light", color);
+                    Storage.set('previewBgColor_light', color);
                 }
 
                 // 应用颜色
-                const preview = document.getElementById("preview");
                 const bgColorBtn = document.getElementById("p-tb-bgColor");
 
                 preview.style.backgroundColor = color;
@@ -2258,7 +2690,7 @@ sequenceDiagram
         // 同步滚动
         syncScrollBtn.onclick = function() {
             isSyncScroll = !isSyncScroll;
-            localStorage.setItem("mdEditor_syncScroll", isSyncScroll ? "true" : "false");
+            Storage.setBool('syncScroll', isSyncScroll);
             syncScrollBtn.dataset.select = isSyncScroll ? "true" : "false";
 
             // 更新设置菜单中的按钮状态
@@ -2273,10 +2705,8 @@ sequenceDiagram
 
     /* 设置预览宽度 */
     function setPreviewWidth(width, btn) {
+        // #preview 本身有 .markdown-body 类，只需设置一次
         preview.style.maxWidth = width;
-        // 同时更新 markdown-body 的 max-width
-        const markdownBody = document.querySelector(".markdown-body");
-        markdownBody.style.maxWidth = width;
 
         // 保存同步滚动按钮的当前状态
         const syncScrollBtn = document.getElementById("tb-syncScroll");
@@ -2351,7 +2781,7 @@ sequenceDiagram
     }
 
     function linkAction() {
-        insertText("[链接](https://)");
+        insertText("[链接](https://www.example.com)");
     }
 
     function innerCodeAction() {
@@ -2496,18 +2926,40 @@ erDiagram
 \`\`\``
     };
 
+    // execCommand 已废弃，使用带回退的辅助函数
+    // 优先使用 execCommand 以保留撤销历史，失败时回退到 setRangeText
+    function execInsertText(textEl, text) {
+        textEl.focus();
+        try {
+            const success = document.execCommand('insertText', false, text);
+            if (success) return;
+        } catch (e) { /* execCommand 不可用 */ }
+        // 回退：使用 setRangeText（不支持撤销，但功能正常）
+        const start = textEl.selectionStart;
+        textEl.setRangeText(text, start, textEl.selectionEnd, 'end');
+    }
+
+    function execDelete(textEl) {
+        textEl.focus();
+        try {
+            const success = document.execCommand('delete');
+            if (success) return;
+        } catch (e) { /* execCommand 不可用 */ }
+        // 回退：手动删除选中内容
+        const start = textEl.selectionStart;
+        const end = textEl.selectionEnd;
+        if (start !== end) {
+            textEl.setRangeText('', start, end, 'end');
+        }
+    }
+
     function insertFlowchart(type) {
         const template = flowchartTemplates[type];
         if (!template) return;
 
         // 使用 execCommand 插入文本，支持撤销
         editor.focus();
-        const success = document.execCommand('insertText', false, template + '\n');
-
-        // 如果 execCommand 失败，使用传统方式
-        if (!success) {
-            insertTextAtLineStart(template + '\n');
-        }
+        execInsertText(editor, template + '\n');
 
         render();
     }
@@ -2539,7 +2991,7 @@ erDiagram
         editor.focus();
 
         // 使用浏览器的删除命令，这样可以使用 Ctrl+Z 撤销
-        document.execCommand('delete');
+        execDelete(editor);
 
         // 更新行号和状态栏（使用防抖延迟更新，确保删除操作完成）
         setTimeout(() => {
@@ -2551,9 +3003,7 @@ erDiagram
 
     /* 在光标位置插入文本 */
     function insertText(text) {
-        editor.focus();
-        // 使用 execCommand 支持撤销
-        document.execCommand('insertText', false, text);
+        execInsertText(editor, text);
         updateLineNumbers();
         updateEditorFootBar();
         debouncedRender();  // 使用防抖渲染
@@ -2575,7 +3025,7 @@ erDiagram
         editor.focus();
 
         // 使用 execCommand 支持撤销
-        document.execCommand('insertText', false, newText);
+        execInsertText(editor, newText);
 
         // 调整光标位置（在结束标记之前）
         const newCursorPos = start + before.length + selected.length;
@@ -2603,7 +3053,7 @@ erDiagram
         editor.focus();
 
         // 使用 execCommand 支持撤销
-        document.execCommand('insertText', false, text);
+        execInsertText(editor, text);
 
         // 移动光标到插入文本的末尾
         const newPos = lineStart + text.length;
@@ -2614,8 +3064,422 @@ erDiagram
         render();
     }
 
+    /* ============ 查找替换功能 ============ */
+    let findResults = [];
+    let currentFindIndex = -1;
+    let isFindPanelOpen = false;
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let totalReplaceCount = 0;  // 累计替换次数
+
+    // 清空替换提示信息
+    function clearReplaceMessage() {
+        document.getElementById('find-replace-message').textContent = '';
+        totalReplaceCount = 0;
+    }
+
+    // 打开查找面板
+    function openFindPanel() {
+        const panel = document.getElementById('findReplacePanel');
+
+        // 清空替换提示
+        clearReplaceMessage();
+
+        // 首次打开时，将面板居中并置于工具栏下方
+        const panelWidth = panel.offsetWidth || 400;
+        const panelHeight = panel.offsetHeight || 300;
+        const windowWidth = window.innerWidth;
+
+        panel.style.left = ((windowWidth - panelWidth) / 2) + 'px';
+        panel.style.top = '90px';  // 工具栏下方
+        panel.style.right = 'auto';
+
+        panel.classList.add('show');
+        const findInput = document.getElementById('find-input');
+        findInput.focus();
+        isFindPanelOpen = true;
+
+        // 如果编辑器中有选中文本，自动填充到查找框
+        if (editor.selectionStart !== editor.selectionEnd) {
+            const selectedText = editor.value.substring(editor.selectionStart, editor.selectionEnd);
+            findInput.value = selectedText;
+        }
+    }
+
+    // 打开替换面板（与查找相同）
+    function openReplacePanel() {
+        openFindPanel();
+    }
+
+    // 关闭查找替换面板
+    function closeFindReplacePanel() {
+        const panel = document.getElementById('findReplacePanel');
+        panel.classList.remove('show');
+        document.getElementById('find-input').value = '';
+        document.getElementById('replace-input').value = '';
+        document.getElementById('find-current').textContent = '0';
+        document.getElementById('find-total').textContent = '0';
+        findResults = [];
+        currentFindIndex = -1;
+        isFindPanelOpen = false;
+
+        // 清空替换提示
+        clearReplaceMessage();
+    }
+
+    // 执行查找
+    // shouldFocus: 是否聚焦到编辑器（输入时自动查找不聚焦，点击按钮查找时聚焦）
+    function performFind(shouldFocus = true) {
+        const searchText = document.getElementById('find-input').value;
+
+        if (!searchText) {
+            document.getElementById('find-current').textContent = '0';
+            document.getElementById('find-total').textContent = '0';
+            findResults = [];
+            currentFindIndex = -1;
+            return;
+        }
+
+        // 重新执行查找（每次点击查找按钮都重新搜索）
+        const content = editor.value;
+        findResults = [];
+
+        // 简单查找，不区分大小写
+        const regex = new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        let match;
+
+        while ((match = regex.exec(content)) !== null) {
+            findResults.push({
+                start: match.index,
+                end: match.index + match[0].length,
+                text: match[0]
+            });
+
+            // 防止无限循环（零宽度匹配）
+            if (match.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+        }
+
+        // 显示当前/总数
+        if (findResults.length > 0) {
+            currentFindIndex = 0;
+            document.getElementById('find-current').textContent = currentFindIndex + 1;
+            document.getElementById('find-total').textContent = findResults.length;
+            goToFindResult(0, shouldFocus);
+        } else {
+            document.getElementById('find-current').textContent = '0';
+            document.getElementById('find-total').textContent = '0';
+        }
+    }
+
+    // 跳转到指定查找结果
+    // shouldFocus: 是否聚焦到编辑器
+    function goToFindResult(index, shouldFocus = true) {
+        if (index < 0 || index >= findResults.length) return;
+
+        currentFindIndex = index;
+        const result = findResults[index];
+
+        if (shouldFocus) {
+            editor.focus();
+        }
+        editor.setSelectionRange(result.start, result.end);
+
+        // 更新计数显示
+        document.getElementById('find-current').textContent = currentFindIndex + 1;
+        document.getElementById('find-total').textContent = findResults.length;
+
+        // 更新光标位置信息（包括行号高亮和目录高亮）
+        updateCursorInfo();
+
+        // 滚动到可见区域
+        const textBefore = editor.value.substring(0, result.start);
+        const linesBefore = textBefore.split('\n').length;
+        // 获取实际行高：字体大小16px * line-height 1.8 = 28.8px
+        const computedStyle = window.getComputedStyle(editor);
+        const fontSize = parseFloat(computedStyle.fontSize);
+        const lineHeight = parseFloat(computedStyle.lineHeight) || (fontSize * 1.8);
+        const scrollPos = (linesBefore - 10) * lineHeight;
+        editor.scrollTop = scrollPos > 0 ? scrollPos : 0;
+    }
+
+    // 查找下一个
+    function findNext() {
+        if (findResults.length === 0) {
+            performFind();
+            return;
+        }
+
+        currentFindIndex++;
+        if (currentFindIndex >= findResults.length) {
+            currentFindIndex = 0;
+        }
+
+        goToFindResult(currentFindIndex);
+    }
+
+    // 查找上一个
+    function findPrevious() {
+        if (findResults.length === 0) {
+            performFind();
+            return;
+        }
+
+        currentFindIndex--;
+        if (currentFindIndex < 0) {
+            currentFindIndex = findResults.length - 1;
+        }
+
+        goToFindResult(currentFindIndex);
+    }
+
+    // 替换当前匹配
+    function replaceCurrent() {
+        if (currentFindIndex < 0 || currentFindIndex >= findResults.length) {
+            showToast('没有找到匹配项', 'warning');
+            return;
+        }
+
+        const result = findResults[currentFindIndex];
+        const replaceText = document.getElementById('replace-input').value;
+
+        // 保存之前的索引位置，用于替换后定位
+        const savedIndex = currentFindIndex;
+
+        // 使用 setRangeText 进行替换，这样可以保留撤销历史
+        editor.focus();
+        editor.setRangeText(replaceText, result.start, result.end, 'select');
+
+        // 重新执行查找以获取新的结果
+        findResults = [];
+        performFind(false);
+
+        // 更新行号和状态
+        updateLineNumbers();
+        updateEditorFootBar();
+        render();
+
+        // 尝试保持在相同或下一个位置
+        if (findResults.length > 0) {
+            if (savedIndex < findResults.length) {
+                goToFindResult(savedIndex, false);
+            } else {
+                goToFindResult(findResults.length - 1, false);
+            }
+        }
+
+        // 更新累计替换次数并显示提示
+        totalReplaceCount++;
+        const messageEl = document.getElementById('find-replace-message');
+        messageEl.textContent = `总替换数：已替换 ${totalReplaceCount} 处`;
+
+        // 确保焦点在编辑器上，这样 Ctrl+Z 会撤销编辑器的内容
+        editor.focus();
+    }
+
+    // 全部替换
+    function replaceAll() {
+        if (findResults.length === 0) {
+            showToast('没有找到匹配项', 'warning');
+            return;
+        }
+
+        const replaceText = document.getElementById('replace-input').value;
+        let replaceCount = 0;
+
+        // 从后往前替换，避免索引变化问题
+        // 使用 setRangeText 以保留撤销历史（用户可以多次 Ctrl+Z 逐步撤销）
+        editor.focus();
+        for (let i = findResults.length - 1; i >= 0; i--) {
+            const result = findResults[i];
+            editor.setRangeText(replaceText, result.start, result.end, 'end');
+            replaceCount++;
+        }
+
+        // 清空查找结果
+        findResults = [];
+        currentFindIndex = -1;
+        document.getElementById('find-current').textContent = '0';
+        document.getElementById('find-total').textContent = '0';
+
+        // 更新行号和状态
+        updateLineNumbers();
+        updateEditorFootBar();
+        render();
+
+        // 更新累计替换次数并显示提示
+        totalReplaceCount += replaceCount;
+        document.getElementById('find-replace-message').textContent = `总替换数：已替换 ${totalReplaceCount} 处`;
+
+        showToast(`已全部替换，共 ${replaceCount} 处`, 'success');
+
+        // 确保焦点在编辑器上，这样 Ctrl+Z 会撤销编辑器的内容
+        editor.focus();
+    }
+
+    // 查找面板拖拽和事件监听
+    document.addEventListener('DOMContentLoaded', function() {
+        const panel = document.getElementById('findReplacePanel');
+        const panelHeader = document.getElementById('findReplacePanelHeader');
+        const findInput = document.getElementById('find-input');
+        const replaceInput = document.getElementById('replace-input');
+
+        // 拖拽功能
+        panelHeader.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('panel-close')) return;
+            isDragging = true;
+            dragOffsetX = e.clientX - panel.offsetLeft;
+            dragOffsetY = e.clientY - panel.offsetTop;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const x = e.clientX - dragOffsetX;
+            const y = e.clientY - dragOffsetY;
+
+            // 确保不拖出屏幕
+            const maxX = window.innerWidth - panel.offsetWidth;
+            const maxY = window.innerHeight - panel.offsetHeight;
+
+            panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+            panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+            panel.style.right = 'auto';
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+
+        // 查找输入框事件
+        findInput.addEventListener('keydown', function(e) {
+            // Ctrl+F 不阻止冒泡，让弹框处理
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                return;  // 不调用 stopPropagation，让事件冒泡
+            }
+
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performFind();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeFindReplacePanel();
+            }
+        });
+
+        findInput.addEventListener('input', function(e) {
+            e.stopPropagation();
+            // 清空旧结果并重新执行查找
+            findResults = [];
+            currentFindIndex = -1;
+            document.getElementById('find-current').textContent = '0';
+            document.getElementById('find-total').textContent = '0';
+            // 清空替换提示
+            clearReplaceMessage();
+            // 自动执行查找，但不聚焦编辑器（保持焦点在输入框）
+            performFind(false);
+        });
+
+        // 替换输入框事件
+        replaceInput.addEventListener('keydown', function(e) {
+            // Ctrl+F 不阻止冒泡，让弹框处理
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                return;  // 不调用 stopPropagation，让事件冒泡
+            }
+
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                replaceCurrent();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeFindReplacePanel();
+            }
+        });
+
+        // 弹框整体事件：Ctrl+F 关闭弹框
+        panel.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                e.stopPropagation();
+                closeFindReplacePanel();
+            }
+        });
+
+        replaceInput.addEventListener('input', function(e) {
+            e.stopPropagation();
+            // 清空替换提示
+            clearReplaceMessage();
+        });
+
+        // 初始化目录宽度拖拽功能
+        function initTOCResizer() {
+            const tocResizer = document.getElementById('tocResizer');
+            const toc = document.getElementById('toc');
+
+            if (!tocResizer || !toc) return;
+
+            // 应用保存的宽度
+            toc.style.width = currentTOCWidth + 'px';
+
+            // 根据目录显示状态初始化拖动条显示/隐藏
+            if (!isTOCVisible) {
+                tocResizer.classList.add('toc-hidden');
+            }
+
+            // 鼠标按下
+            tocResizer.addEventListener('mousedown', function(e) {
+                isTOCResizing = true;
+                tocResizeStartX = e.clientX;
+                tocResizeStartWidth = toc.offsetWidth;
+                tocResizer.classList.add('dragging');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            // 鼠标移动
+            document.addEventListener('mousemove', function(e) {
+                if (!isTOCResizing) return;
+                const deltaX = e.clientX - tocResizeStartX;
+                const newWidth = Math.max(TOC_MIN_WIDTH, Math.min(TOC_MAX_WIDTH, tocResizeStartWidth + deltaX));
+                toc.style.width = newWidth + 'px';
+            });
+
+            // 鼠标释放
+            document.addEventListener('mouseup', function() {
+                if (isTOCResizing) {
+                    isTOCResizing = false;
+                    tocResizer.classList.remove('dragging');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    const width = toc.offsetWidth;
+                    Storage.set('tocWidth', width);
+                    currentTOCWidth = width;
+                }
+            });
+
+            // 双击重置
+            tocResizer.addEventListener('dblclick', function() {
+                toc.style.width = TOC_DEFAULT_WIDTH + 'px';
+                Storage.set('tocWidth', TOC_DEFAULT_WIDTH);
+                currentTOCWidth = TOC_DEFAULT_WIDTH;
+                showToast('目录宽度已重置', 'info');
+            });
+        }
+
+        // 调用初始化
+        initTOCResizer();
+    });
+
     /* 自动保存 */
-    editor.value = localStorage.getItem("mdEditor_content") || editor.value;
+    editor.value = Storage.get('content', DEFAULT_CONTENT);
 
     // 防抖渲染（300ms 延迟）
     const debouncedRender = debounce(function() {
@@ -2624,23 +3488,136 @@ erDiagram
     }, 300);
 
     editor.addEventListener("input", () => {
-        localStorage.setItem("mdEditor_content", editor.value);
+        Storage.set('content', editor.value);
         updateLineNumbers();
         updateEditorFootBar();
         debouncedRender();  // 使用防抖渲染
     });
 
     // 编辑器滚动事件 - 同步行号和预览
-    editor.addEventListener("scroll", () => {
-        // 行号滚动同步
+    // 缓存编辑器行高计算（避免滚动时重复调用 getComputedStyle）
+    let cachedLineHeight = 0;
+    let cachedLineHeightFontSize = 0;
+    function getEditorLineHeight() {
+        const editorStyle = window.getComputedStyle(editor);
+        const fontSize = parseFloat(editorStyle.fontSize);
+        if (fontSize !== cachedLineHeightFontSize) {
+            cachedLineHeightFontSize = fontSize;
+            cachedLineHeight = parseFloat(editorStyle.lineHeight) || (fontSize * 1.8);
+        }
+        return cachedLineHeight;
+    }
+
+    const handleEditorScroll = () => {
+        // 行号滚动同步（立即执行，无延迟）
         lineNumbers.scrollTop = editor.scrollTop;
 
-        // 预览区滚动同步
-        if (isSyncScroll && previewContentWrapper) {
-            const scrollPercent = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
-            previewContentWrapper.scrollTop = scrollPercent * (previewContentWrapper.scrollHeight - previewContentWrapper.clientHeight);
+        const lineHeight = getEditorLineHeight();
+        const currentLine = Math.round(editor.scrollTop / lineHeight) + 1;
+
+        // 预览区滚动同步（基于 scrollMap 块级元素映射）
+        if (isSyncScroll && previewContentWrapper && scrollMap.length > 0) {
+            // 在 scrollMap 中用二分查找找到当前行对应的块级元素
+            let targetIndex = -1;
+            let lo = 0, hi = scrollMap.length - 1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                if (scrollMap[mid].lineNum <= currentLine) {
+                    targetIndex = mid;
+                    lo = mid + 1;
+                } else {
+                    hi = mid - 1;
+                }
+            }
+
+            if (targetIndex >= 0) {
+                const targetElement = scrollMap[targetIndex].element;
+
+                // 防御：元素已脱离 DOM（如 mermaid 重新渲染导致旧引用失效）
+                if (!targetElement.isConnected) return;
+
+                const targetLineNum = scrollMap[targetIndex].lineNum;
+
+                // 计算编辑器在当前块内的滚动进度
+                let nextLineNum = Infinity;
+                if (targetIndex + 1 < scrollMap.length) {
+                    nextLineNum = scrollMap[targetIndex + 1].lineNum;
+                }
+                const progress = (currentLine - targetLineNum) / Math.max(1, nextLineNum - targetLineNum);
+
+                // 计算目标元素的滚动位置，加上块内进度偏移
+                const containerRect = previewContentWrapper.getBoundingClientRect();
+                const elementRect = targetElement.getBoundingClientRect();
+                const relativeTop = elementRect.top - containerRect.top + previewContentWrapper.scrollTop;
+
+                // 预览区对应下一个元素的位置
+                let nextElementTop = relativeTop + targetElement.offsetHeight;
+                if (targetIndex + 1 < scrollMap.length && scrollMap[targetIndex + 1].element.isConnected) {
+                    const nextRect = scrollMap[targetIndex + 1].element.getBoundingClientRect();
+                    nextElementTop = nextRect.top - containerRect.top + previewContentWrapper.scrollTop;
+                }
+
+                // 按进度插值计算目标滚动位置
+                const interpolatedTop = relativeTop + (nextElementTop - relativeTop) * progress;
+                const offsetTop = interpolatedTop - 60; // 留出顶部空间
+                previewContentWrapper.scrollTop = offsetTop > 0 ? offsetTop : 0;
+            }
         }
-    });
+
+        // 目录高亮（立即执行）
+        if (isTOCVisible) {
+            highlightTOCItem(currentLine);
+        }
+    };
+
+    // 使用节流包装滚动处理（16ms ≈ 60fps）
+    editor.addEventListener("scroll", throttle(handleEditorScroll, 16));
+
+    // 预览区滚动时联动 TOC 高亮（纯预览模式下 editor 不触发 scroll 事件）
+    const handlePreviewScroll = () => {
+        if (!isTOCVisible || headingMap.length === 0) return;
+
+        const containerRect = previewContentWrapper.getBoundingClientRect();
+        const triggerLine = containerRect.top + 80; // 距顶部 80px 的位置作为判定线
+
+        // 找到判定线上方最后一个标题元素
+        let activeIndex = -1;
+        for (let i = 0; i < headingMap.length; i++) {
+            const el = headingMap[i].element;
+            if (!el.isConnected) continue;
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= triggerLine) {
+                activeIndex = i;
+            } else {
+                break;
+            }
+        }
+
+        if (activeIndex !== lastActiveTOCIndex) {
+            if (!tocUpdatePending) {
+                tocUpdatePending = true;
+                requestAnimationFrame(() => {
+                    const tocItems = toc.querySelectorAll(".toc-item");
+                    if (lastActiveTOCIndex >= 0 && tocItems[lastActiveTOCIndex]) {
+                        tocItems[lastActiveTOCIndex].classList.remove("toc-item-active");
+                    }
+                    if (activeIndex >= 0 && tocItems[activeIndex]) {
+                        tocItems[activeIndex].classList.add("toc-item-active");
+                        // TOC 滚动跟随：确保选中项可见
+                        const item = tocItems[activeIndex];
+                        const tocRect = toc.getBoundingClientRect();
+                        const itemRect = item.getBoundingClientRect();
+                        if (itemRect.top < tocRect.top || itemRect.bottom > tocRect.bottom) {
+                            toc.scrollTop += itemRect.top - tocRect.top - tocRect.height / 3;
+                        }
+                    }
+                    lastActiveTOCIndex = activeIndex;
+                    tocUpdatePending = false;
+                });
+            }
+        }
+    };
+    previewContentWrapper.addEventListener("scroll", throttle(handlePreviewScroll, 16));
 
     // 编辑器光标位置更新
     const debouncedUpdateCursorInfo = debounce(updateCursorInfo, 50);
@@ -2673,6 +3650,14 @@ erDiagram
         } else if (ctrl && e.key === "d") {
             e.preventDefault();
             deleteCurrentLine();
+        } else if (ctrl && e.key === "f") {
+            e.preventDefault();
+            // 如果面板已打开则关闭，否则打开
+            if (isFindPanelOpen) {
+                closeFindReplacePanel();
+            } else {
+                openFindPanel();
+            }
         }
     });
 
@@ -2695,39 +3680,68 @@ erDiagram
             return `MATH_INLINE_${mathIndex++}_PLACEHOLDER`;
         });
 
-        // 渲染 Markdown
-        preview.innerHTML = marked.parse(content, {breaks: true});
+        // 渲染 Markdown + XSS 防护（单次 innerHTML 赋值）
+        try {
+            let html = marked.parse(content, {breaks: true});
+            // 使用 DOMPurify 清理 HTML，防止 XSS
+            if (typeof DOMPurify !== 'undefined') {
+                html = DOMPurify.sanitize(html, {ADD_TAGS: ['mermaid'], ADD_ATTR: ['target']});
+            }
 
-        // 恢复数学公式
-        preview.innerHTML = preview.innerHTML.replace(/MATH_BLOCK_(\d+)_PLACEHOLDER/g, (match, index) => {
-            const formula = mathBlocks[parseInt(index)];
-            return `<span class="math-display">$$${formula}$$</span>`;
-        });
-        preview.innerHTML = preview.innerHTML.replace(/MATH_INLINE_(\d+)_PLACEHOLDER/g, (match, index) => {
-            const formula = mathBlocks[parseInt(index)];
-            return `<span class="math-inline">$${formula}$</span>`;
-        });
+            // 恢复数学公式（在字符串中替换，避免多次 innerHTML）
+            html = html.replace(/MATH_BLOCK_(\d+)_PLACEHOLDER/g, (match, index) => {
+                const formula = mathBlocks[parseInt(index)];
+                return `<span class="math-display">$$${formula}$$</span>`;
+            });
+            html = html.replace(/MATH_INLINE_(\d+)_PLACEHOLDER/g, (match, index) => {
+                const formula = mathBlocks[parseInt(index)];
+                return `<span class="math-inline">$${formula}$</span>`;
+            });
+
+            preview.innerHTML = html;
+        } catch (e) {
+            console.error('Markdown 渲染失败:', e);
+        }
 
         generateTOC();
-        preview.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightBlock(block);
-        });
+
+        // 代码高亮
+        try {
+            preview.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        } catch (e) {
+            console.error('代码高亮失败:', e);
+        }
 
         // 渲染数学公式
-        renderMathInElement(preview, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false},
-                {left: '\\[', right: '\\]', display: true},
-                {left: '\\(', right: '\\)', display: false}
-            ],
-            throwOnError: false
+        try {
+            renderMathInElement(preview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false
+            });
+        } catch (e) {
+            console.error('KaTeX 渲染失败:', e);
+        }
+
+        try {
+            renderMermaid();
+        } catch (e) {
+            console.error('Mermaid 渲染失败:', e);
+        }
+
+        // 构建块级元素到行号的滚动映射表
+        // 必须在所有 DOM 变更（特别是 mermaid 的 replaceWith）完成后执行
+        // 使用 requestAnimationFrame 确保 mermaid 异步渲染完成后元素高度正确
+        requestAnimationFrame(() => {
+            buildScrollMap();
+            updatePreviewFootBar();
         });
-
-        renderMermaid();
-
-        // 更新预览区域底部统计
-        updatePreviewFootBar();
     }
 
     render();
@@ -2747,6 +3761,55 @@ erDiagram
         selectedLineNumber = line;
         if (lineNumbers.children[line - 1]) {
             lineNumbers.children[line - 1].classList.add("selected");
+        }
+
+        // 如果目录开启，高亮对应的目录条目
+        if (isTOCVisible) {
+            highlightTOCItem(line);
+        }
+    }
+
+    /* 高亮当前光标位置对应的目录条目 */
+    function highlightTOCItem(line) {
+        // 找到当前行对应的标题（遍历所有条目找最后一个匹配项）
+        let activeIndex = -1;
+        for (let i = 0; i < headingMap.length; i++) {
+            if (headingMap[i].lineNum !== null && line >= headingMap[i].lineNum) {
+                activeIndex = i;
+            }
+        }
+
+        // 如果索引没有变化，不做任何操作
+        if (activeIndex === lastActiveTOCIndex) {
+            return;
+        }
+
+        // 使用 requestAnimationFrame 批量更新
+        if (!tocUpdatePending) {
+            tocUpdatePending = true;
+            requestAnimationFrame(() => {
+                const tocItems = toc.querySelectorAll(".toc-item");
+
+                // 移除上一个激活状态
+                if (lastActiveTOCIndex >= 0 && tocItems[lastActiveTOCIndex]) {
+                    tocItems[lastActiveTOCIndex].classList.remove("toc-item-active");
+                }
+
+                // 添加新的激活状态
+                if (activeIndex >= 0 && tocItems[activeIndex]) {
+                    tocItems[activeIndex].classList.add("toc-item-active");
+                    // TOC 滚动跟随：确保选中项可见
+                    const item = tocItems[activeIndex];
+                    const tocRect = toc.getBoundingClientRect();
+                    const itemRect = item.getBoundingClientRect();
+                    if (itemRect.top < tocRect.top || itemRect.bottom > tocRect.bottom) {
+                        toc.scrollTop += itemRect.top - tocRect.top - tocRect.height / 3;
+                    }
+                }
+
+                lastActiveTOCIndex = activeIndex;
+                tocUpdatePending = false;
+            });
         }
     }
 
@@ -2859,11 +3922,13 @@ erDiagram
         setPreviewWidth("1020px", middleBtn);
     }
 
-    // 修改 render 函数以更新预览状态栏
-    const originalRender = render;
-    render = function() {
-        originalRender();
-    };
+    // 保存编辑器/预览的分割比例，避免切换模式时丢失
+    // 必须在 setEditMode() 调用之前声明
+    let savedEditorWidth = "50%";
+    let savedPreviewWidth = "50%";
+
+    // 初始化编辑模式（设置初始状态的内联样式）
+    setEditMode();
 
     /* Mermaid */
     function renderMermaid() {
@@ -2874,13 +3939,141 @@ erDiagram
             div.innerHTML = el.textContent;
             parent.replaceWith(div);
         });
-        mermaid.init(undefined, preview.querySelectorAll(".mermaid"));
+        const mermaidElements = preview.querySelectorAll(".mermaid");
+        if (mermaidElements.length > 0) {
+            if (typeof mermaid.run === 'function') {
+                mermaid.run({nodes: mermaidElements});
+            } else {
+                mermaid.init(undefined, mermaidElements);
+            }
+        }
+    }
+
+    /* 构建块级元素滚动映射表 */
+    function buildScrollMap() {
+        scrollMap = [];
+        // 预览区所有直接子块级元素
+        const children = preview.children;
+        const editorLines = editor.value.split('\n');
+
+        let editorScanLine = 0; // 当前扫描到的编辑器行（0-based）
+
+        for (let i = 0; i < children.length; i++) {
+            const el = children[i];
+            const tag = el.tagName;
+
+            // 跳过 script/style
+            if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+
+            // 获取该元素对应的编辑器行号
+            let lineNum = findSourceLine(el, editorLines, editorScanLine);
+
+            if (lineNum !== null) {
+                editorScanLine = lineNum + 1; // 推进扫描位置到下一行
+                scrollMap.push({
+                    element: el,
+                    lineNum: lineNum + 1 // 转为 1-based，与 headingMap 一致
+                });
+            }
+        }
+    }
+
+    /* 通过元素文本内容在编辑器中查找对应的源行号 */
+    function findSourceLine(el, editorLines, startLine) {
+        const elText = (el.textContent || '').trim().substring(0, 100);
+        const tag = el.tagName;
+
+        // 标题元素：匹配 # 标题格式
+        if (/^H[1-6]$/.test(tag)) {
+            const level = parseInt(tag[1]);
+            const prefix = '#'.repeat(level) + ' ';
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith(prefix)) {
+                    return i;
+                }
+            }
+        }
+
+        // 代码块元素：匹配 ``` 语法
+        if (tag === 'PRE') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith('```')) {
+                    return i;
+                }
+            }
+        }
+
+        // 引用块：匹配 > 语法
+        if (tag === 'BLOCKQUOTE') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith('>')) {
+                    return i;
+                }
+            }
+        }
+
+        // 列表：匹配 - 或 * 或 1. 语法
+        if (tag === 'UL' || tag === 'OL') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                const line = editorLines[i].trim();
+                if (/^[-*+]\s/.test(line) || /^\d+\.\s/.test(line)) {
+                    return i;
+                }
+            }
+        }
+
+        // 表格：匹配 | 语法
+        if (tag === 'TABLE') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith('|')) {
+                    return i;
+                }
+            }
+        }
+
+        // 水平线
+        if (tag === 'HR') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                const line = editorLines[i].trim();
+                if (/^[-*_]{3,}$/.test(line)) {
+                    return i;
+                }
+            }
+        }
+
+        // 包含图片的元素（P、DIV 等）：匹配 ![...](...) 语法
+        if (el.querySelector('img')) {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (/!\[.*\]\(.*\)/.test(editorLines[i])) {
+                    return i;
+                }
+            }
+        }
+
+        // 段落和其他元素：用文本内容匹配
+        if (elText.length >= 3) {
+            const searchLen = Math.min(15, elText.length);
+            const searchStr = elText.substring(0, searchLen);
+            for (let i = startLine; i < editorLines.length; i++) {
+                const line = editorLines[i].trim();
+                // 去除常见 markdown 标记后再比较
+                const cleanLine = line.replace(/[*_~`\[\]()#>|]/g, '').trim();
+                if (cleanLine.includes(searchStr)) {
+                    return i;
+                }
+            }
+        }
+
+        // 兜底：返回 startLine 作为近似行号
+        return startLine < editorLines.length ? startLine : null;
     }
 
     /* TOC */
     function generateTOC() {
         toc.innerHTML = "";
         headingMap = []; // 清空映射表
+        lastActiveTOCIndex = -1; // 重置目录激活索引
+        tocUpdatePending = false;
 
         const headers = preview.querySelectorAll("h1,h2,h3,h4,h5,h6");
         const editorLines = editor.value.split("\n");
@@ -2943,11 +4136,24 @@ erDiagram
                     behavior: 'smooth'
                 });
 
-                // 滚动编辑器到对应行
+                // 滚动编辑器到对应行并设置光标位置
                 if (targetLineNum !== null) {
-                    const lineHeight = 16 * 1.8; // 字体大小16px，行高1.8
-                    const scrollPosition = (targetLineNum - 1) * lineHeight;
-                    editor.scrollTop = scrollPosition;
+                    // 设置光标到目标行首
+                    const lines = editor.value.split("\n");
+                    let cursorPos = 0;
+                    for (let i = 0; i < targetLineNum - 1; i++) {
+                        cursorPos += lines[i].length + 1; // +1 for newline
+                    }
+                    editor.focus();
+                    editor.setSelectionRange(cursorPos, cursorPos);
+
+                    // 在光标设置完成后滚动（避免 setSelectionRange 触发的自动滚动覆盖）
+                    requestAnimationFrame(() => {
+                        const lineHeight = 16 * 1.8; // 字体大小16px，行高1.8
+                        const scrollPosition = (targetLineNum - 1) * lineHeight;
+                        editor.scrollTop = scrollPosition;
+                    });
+
                     setSelectedLineNumber(targetLineNum);
                 }
             };
@@ -2958,14 +4164,18 @@ erDiagram
     /* 目录显示/隐藏 */
     function toggleTOC() {
         isTOCVisible = !isTOCVisible;
-        localStorage.setItem("mdEditor_tocVisible", isTOCVisible ? "true" : "false");
+        Storage.setBool('tocVisible', isTOCVisible);
+
+        const tocResizer = document.getElementById("tocResizer");
 
         if (isTOCVisible) {
             toc.classList.remove("toc-hidden");
+            if (tocResizer) tocResizer.classList.remove("toc-hidden");
             // 添加选中效果
             document.getElementById("tocToggleBtn").dataset.select = "true";
         } else {
             toc.classList.add("toc-hidden");
+            if (tocResizer) tocResizer.classList.add("toc-hidden");
             // 移除选中效果
             delete document.getElementById("tocToggleBtn").dataset.select;
         }
@@ -2988,11 +4198,11 @@ erDiagram
     function setEditMode() {
         const editorContainer = document.querySelector(".editor-container");
         editorContainer.style.display = "flex";
-        editorContainer.style.width = "50%";
+        editorContainer.style.width = savedEditorWidth;
         editorContainer.style.minHeight = "0";
         const previewWrapper = document.querySelector(".preview-wrapper");
         previewWrapper.style.display = "flex";
-        previewWrapper.style.width = "50%";
+        previewWrapper.style.width = savedPreviewWidth;
         previewWrapper.style.minHeight = "0";
         const resizerContainer = document.querySelector(".resizer-container");
         resizerContainer.style.display = "flex";
@@ -3015,12 +4225,12 @@ erDiagram
         if (!theme) return;
 
         currentTheme = themeKey;
-        localStorage.setItem("mdEditor_theme", themeKey);
+        Storage.set('theme', themeKey);
 
         // 如果在浅色模式下选择了不支持浅色的主题，自动切换到深色模式
         if (!isDarkMode && !theme.hasDarkVariant) {
             isDarkMode = true;
-            localStorage.setItem("mdEditor_darkMode", "true");
+            Storage.set('darkMode', 'true');
         }
 
         applyTheme();
@@ -3029,14 +4239,14 @@ erDiagram
     /* 切换深色/浅色模式 */
     function toggleDarkMode() {
         isDarkMode = !isDarkMode;
-        localStorage.setItem("mdEditor_darkMode", isDarkMode ? "true" : "false");
+        Storage.setBool('darkMode', isDarkMode);
 
         // 先检查当前主题是否支持新模式
         const theme = themes[currentTheme];
         if (theme && !isDarkMode && !theme.hasDarkVariant) {
             // 浅色模式下，当前主题不支持，自动切换到 GitHub
             currentTheme = 'github';
-            localStorage.setItem("mdEditor_theme", currentTheme);
+            Storage.set('theme', currentTheme);
         }
 
         applyTheme();
@@ -3093,27 +4303,35 @@ erDiagram
         generatePreviewColorOptions(isDarkMode);
 
         // 应用编辑器背景颜色
-        const editorColorKey = isDarkMode ? "mdEditor_bgColor_dark" : "mdEditor_bgColor_light";
-        const savedEditorColor = localStorage.getItem(editorColorKey);
-        if (savedEditorColor !== null) {
-            const editorTextarea = document.getElementById("editor");
-            const lineNumbers = document.getElementById("lineNumbers");
-            const bgColorBtn = document.getElementById("tb-bgColor");
+        const editorColorKey = isDarkMode ? "bgColor_dark" : "bgColor_light";
+        const savedEditorColor = Storage.get(editorColorKey);
+        const editorTextarea = document.getElementById("editor");
+        const lineNumEl = document.getElementById("lineNumbers");
+        const editorBgColorBtn = document.getElementById("tb-bgColor");
 
+        if (savedEditorColor !== null) {
             editorTextarea.style.backgroundColor = savedEditorColor;
-            lineNumbers.style.backgroundColor = savedEditorColor;
-            bgColorBtn.style.backgroundColor = savedEditorColor || "";
+            lineNumEl.style.backgroundColor = savedEditorColor;
+            editorBgColorBtn.style.backgroundColor = savedEditorColor || "";
+        } else {
+            // 清除自定义背景色，使用默认样式
+            editorTextarea.style.backgroundColor = "";
+            lineNumbers.style.backgroundColor = "";
+            editorBgColorBtn.style.backgroundColor = "";
         }
 
         // 应用预览背景颜色
-        const previewColorKey = isDarkMode ? "mdEditor_previewBgColor_dark" : "mdEditor_previewBgColor_light";
-        const savedPreviewColor = localStorage.getItem(previewColorKey);
-        if (savedPreviewColor !== null) {
-            const preview = document.getElementById("preview");
-            const bgColorBtn = document.getElementById("p-tb-bgColor");
+        const previewColorKey = isDarkMode ? "previewBgColor_dark" : "previewBgColor_light";
+        const savedPreviewColor = Storage.get(previewColorKey);
+        const previewBgColorBtn = document.getElementById("p-tb-bgColor");
 
+        if (savedPreviewColor !== null) {
             preview.style.backgroundColor = savedPreviewColor;
-            bgColorBtn.style.backgroundColor = savedPreviewColor || "";
+            previewBgColorBtn.style.backgroundColor = savedPreviewColor || "";
+        } else {
+            // 清除自定义背景色，使用默认样式
+            preview.style.backgroundColor = "";
+            previewBgColorBtn.style.backgroundColor = "";
         }
     }
 
@@ -3132,7 +4350,7 @@ erDiagram
             const button = document.createElement("button");
             button.className = "btn btn-control btn-p-sm dropdown-item";
             button.dataset.theme = key;
-            button.innerHTML = theme.name;
+            button.textContent = theme.name;
             button.onclick = function() {
                 selectTheme(key);
             };
@@ -3160,7 +4378,7 @@ erDiagram
             if (firstButton) {
                 const firstTheme = firstButton.dataset.theme;
                 currentTheme = firstTheme;
-                localStorage.setItem("mdEditor_theme", currentTheme);
+                Storage.set('theme', currentTheme);
 
                 // 更新active状态
                 themeDropdown.querySelectorAll("button").forEach(btn => {
@@ -3178,7 +4396,7 @@ erDiagram
     // 顶部按钮 - 隐藏/显示工具栏
     resizerTop.addEventListener("click", function() {
         isToolbarVisible = !isToolbarVisible;
-        localStorage.setItem("mdEditor_toolbarVisible", isToolbarVisible ? "true" : "false");
+        Storage.setBool('toolbarVisible', isToolbarVisible);
 
         const editorToolbar = document.getElementById("editorToolbar");
         const previewToolbar = document.getElementById("previewToolbar");
@@ -3206,6 +4424,9 @@ erDiagram
         const editorContainer = document.querySelector(".editor-container");
 
         if (isPreviewCollapsed) {
+            // 保存当前比例
+            savedEditorWidth = editorContainer.style.width || "50%";
+            savedPreviewWidth = previewWrapper.style.width || "50%";
             // 折叠预览
             editorContainer.style.width = "100%";
             editorContainer.style.minHeight = "0";
@@ -3214,10 +4435,10 @@ erDiagram
             previewWrapper.style.display = "none";
             resizerMid.title = "展开预览区域";
         } else {
-            // 展开预览
-            editorContainer.style.width = "50%";
+            // 展开预览，恢复之前保存的比例
+            editorContainer.style.width = savedEditorWidth;
             editorContainer.style.minHeight = "0";
-            previewWrapper.style.width = "50%";
+            previewWrapper.style.width = savedPreviewWidth;
             previewWrapper.style.minHeight = "0";
             previewWrapper.style.display = "flex";
             resizerMid.title = "折叠预览区域";
@@ -3226,7 +4447,7 @@ erDiagram
     resizerBottom.addEventListener("click", function() {
         isFootBarHidden = !isFootBarHidden;
         isFootBarVisible = !isFootBarHidden;
-        localStorage.setItem("mdEditor_footBarVisible", isFootBarVisible ? "true" : "false");
+        Storage.setBool('footBarVisible', isFootBarVisible);
 
         // 同时隐藏/显示编辑器和预览区域的底部状态栏
         const editorFootBar = document.querySelector(".editor-container .foot-bar");
@@ -3294,7 +4515,7 @@ erDiagram
             draggedFileName = file.name;  // 保存文件名用于后续保存
             updateFileName(file.name + ' （拖入）');  // 标记为拖入状态
             render();
-            showToast(`已打开: ${file.name}\n按 Ctrl+S 保存时将选择位置`, 5000);
+            showToast(`已打开: ${file.name}\n按 Ctrl+S 保存时将选择位置`, 'success', 5000);
             return true;
         } catch (err) {
             console.error('打开拖拽文件失败:', err);
@@ -3319,6 +4540,8 @@ erDiagram
     // 显示 overlay 时添加 ESC 监听
     function showDragOverlay() {
         dragOverlay.classList.add('show');
+        // 先移除已存在的监听器，避免重复绑定
+        document.removeEventListener('keydown', handleDragEscape);
         document.addEventListener('keydown', handleDragEscape);
     }
 
@@ -3326,6 +4549,19 @@ erDiagram
     function hideDragOverlay() {
         dragOverlay.classList.remove('show');
         document.removeEventListener('keydown', handleDragEscape);
+    }
+
+    /* Loading 遮罩层 */
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+
+    function showLoadingOverlay(message) {
+        loadingText.textContent = message || '正在导出，请稍候...';
+        loadingOverlay.classList.add('show');
+    }
+
+    function hideLoadingOverlay() {
+        loadingOverlay.classList.remove('show');
     }
 
     // 在 body 上监听拖拽进入事件
@@ -3459,18 +4695,8 @@ erDiagram
                     const base64 = ev.target.result;
                     const imageText = "\n![](" + base64 + ")\n";
 
-                    // 使用 execCommand 插入文本，这样可以支持撤销
-                    editor.focus();
-                    const success = document.execCommand('insertText', false, imageText);
-
-                    // 如果 execCommand 失败（某些浏览器可能不支持），则使用传统方式
-                    if (!success) {
-                        const start = editor.selectionStart;
-                        const end = editor.selectionEnd;
-                        const value = editor.value;
-                        editor.value = value.substring(0, start) + imageText + value.substring(end);
-                        editor.selectionStart = editor.selectionEnd = start + imageText.length;
-                    }
+                    // 使用辅助函数插入文本，支持撤销
+                    execInsertText(editor, imageText);
 
                     render();
                 };
@@ -3483,18 +4709,23 @@ erDiagram
 
     /* 保存 */
     async function saveFile() {
-        if (currentFileHandle) {
-            const writable = await currentFileHandle.createWritable();
-            await writable.write(editor.value);
-            await writable.close();
-            updateFileName(currentFileHandle.name);
-            showToast('保存成功！');
-        } else if (draggedFileName) {
-            // 拖拽打开的文件，首次保存需要选择位置
-            showToast('请选择保存位置（已自动填入原文件名）', 'success', 3000);
-            await saveAsWithSuggestedName(draggedFileName);
-        } else {
-            await saveAs();
+        try {
+            if (currentFileHandle) {
+                const writable = await currentFileHandle.createWritable();
+                await writable.write(editor.value);
+                await writable.close();
+                updateFileName(currentFileHandle.name);
+                showToast('保存成功！');
+            } else if (draggedFileName) {
+                // 拖拽打开的文件，首次保存需要选择位置
+                showToast('请选择保存位置（已自动填入原文件名）', 'success', 3000);
+                await saveAsWithSuggestedName(draggedFileName);
+            } else {
+                await saveAs();
+            }
+        } catch (e) {
+            console.error('保存失败:', e);
+            showToast('保存失败：' + e.message, 'danger');
         }
     }
 
@@ -3513,7 +4744,7 @@ erDiagram
             await writable.close();
             updateFileName(currentFileHandle.name);  // 更新文件名（去掉"只读"标记）
             draggedFileName = null;  // 清除拖拽文件标记
-            showToast('保存成功！\n后续保存将直接写入此文件', 3000);
+            showToast('保存成功！\n后续保存将直接写入此文件', 'success', 3000);
         } catch (err) {
             if (err.name !== 'AbortError') {
                 console.error('保存失败:', err);
@@ -3548,6 +4779,8 @@ erDiagram
     function updateFileName(name) {
         const fileNameSpan = document.getElementById("currentFileName");
         fileNameSpan.textContent = name;
+        // 同时更新浏览器标题
+        document.title = name;
     }
 
     /* Toast提示 */
@@ -3568,7 +4801,8 @@ erDiagram
             editor.value = "";
             currentFileHandle = null;
             draggedFileName = null;
-            localStorage.setItem("mdEditor_content", "");
+            // 删除存储的内容，这样刷新后会显示默认内容
+            localStorage.removeItem(Storage.PREFIX + 'content');
             updateFileName("未命名文件");
             render();
         }
@@ -3576,19 +4810,61 @@ erDiagram
 
     /* PDF */
     function exportPDF() {
-        showToast('正在生成 PDF，请稍候...', 'success');
+        showLoadingOverlay('正在生成 PDF，请稍候...');
 
         const fileName = document.getElementById("currentFileName").textContent;
         const pdfFileName = fileName.replace(/\.md$/, '') + '.pdf';
 
+        // 保存当前样式，用于导出后恢复
+        const markdownBody = document.querySelector('.markdown-body');
+        const originalBorderLeft = markdownBody.style.borderLeft;
+        const originalBorderRight = markdownBody.style.borderRight;
+        const originalBoxShadow = markdownBody.style.boxShadow;
+
+        // 获取需要设置分页避免的元素
+        const headings = markdownBody.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        const blocks = markdownBody.querySelectorAll('p, pre, blockquote');
+        const tables = markdownBody.querySelectorAll('table, img, .mermaid');
+
+        // 保存原始的分页样式
+        const originalPageBreakAfter = [];
+        const originalPageBreakInside = [];
+
+        headings.forEach(el => {
+            originalPageBreakAfter.push({ el, value: el.style.pageBreakAfter });
+            el.style.pageBreakAfter = 'avoid';
+        });
+
+        blocks.forEach(el => {
+            originalPageBreakInside.push({ el, value: el.style.pageBreakInside });
+            el.style.pageBreakInside = 'avoid';
+        });
+
+        tables.forEach(el => {
+            originalPageBreakInside.push({ el, value: el.style.pageBreakInside });
+            el.style.pageBreakInside = 'avoid';
+        });
+
+        // 移除左右边框和阴影（保留背景色）
+        markdownBody.style.borderLeft = 'none';
+        markdownBody.style.borderRight = 'none';
+        markdownBody.style.boxShadow = 'none';
+
         const opt = {
-            margin:       [15, 15, 15, 15],
+            margin:       0,
             filename:     pdfFileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  {
                 scale: 2,
                 useCORS: true,
-                letterRendering: true
+                letterRendering: true,
+                onclone: function(clonedDoc) {
+                    // 隐藏 loading 遮罩层，避免被截图进去
+                    const loadingOverlay = clonedDoc.getElementById('loadingOverlay');
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                }
             },
             jsPDF:        {
                 unit: 'mm',
@@ -3598,16 +4874,66 @@ erDiagram
             pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
+        // 恢复样式的函数
+        const restoreStyles = () => {
+            markdownBody.style.borderLeft = originalBorderLeft;
+            markdownBody.style.borderRight = originalBorderRight;
+            markdownBody.style.boxShadow = originalBoxShadow;
+
+            originalPageBreakAfter.forEach(item => {
+                item.el.style.pageBreakAfter = item.value;
+            });
+            originalPageBreakInside.forEach(item => {
+                item.el.style.pageBreakInside = item.value;
+            });
+        };
+
         html2pdf().set(opt).from(preview).save().then(() => {
+            hideLoadingOverlay();
             showToast('PDF 导出成功！');
+            restoreStyles();
         }).catch(err => {
+            hideLoadingOverlay();
             console.error('PDF导出失败:', err);
             showToast('PDF 导出失败', 'error');
+            restoreStyles();
         });
     }
 
     /* 打印 */
     function printDocument() {
+        // 保存当前主题状态
+        const mdTheme = document.getElementById("markdownTheme");
+        const codeTheme = document.getElementById("codeTheme");
+        const originalMdTheme = mdTheme.href;
+        const originalCodeTheme = codeTheme.href;
+        const wasDarkMode = isDarkMode;
+        const theme = themes[currentTheme];
+
+        // 监听打印完成，恢复主题
+        const afterPrint = () => {
+            if (wasDarkMode) {
+                isDarkMode = wasDarkMode;
+                mdTheme.href = originalMdTheme;
+                codeTheme.href = originalCodeTheme;
+            }
+            window.removeEventListener('afterprint', afterPrint);
+        };
+
+        window.addEventListener('afterprint', afterPrint);
+
+        // 如果是深色模式，临时切换到浅色主题
+        if (wasDarkMode) {
+            isDarkMode = false;
+            mdTheme.href = theme.markdownLight;
+            codeTheme.href = theme.codeLight;
+        }
+
+        // 移除焦点，避免 :focus 样式影响打印
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
+
         window.print();
     }
 
@@ -3635,28 +4961,42 @@ erDiagram
 
     /* 导出图片 */
     function exportImage() {
-        showToast('正在生成图片，请稍候...', 'success');
+        // 在显示 loading 之前先获取原始宽度
+        const previewWidth = preview.scrollWidth;
+        const previewHeight = preview.scrollHeight;
 
-        // 使用 onclone 回调来修改克隆的元素，移除高度和滚动限制
+        showLoadingOverlay('正在生成图片，请稍候...');
+
+        const markdownBody = document.querySelector('.markdown-body');
+
+        // 导出图片的逻辑：
+        // 1. 捕获 #preview 元素（包含背景色）
+        // 2. 使用当前预览宽度（用户选择的 S/M/L/F）
+        // 3. 在克隆中移除边框和高度限制，确保内容完整显示
         html2canvas(preview, {
             scale: 2,
             useCORS: true,
-            windowHeight: preview.scrollHeight,
-            windowWidth: preview.scrollWidth,
+            windowHeight: previewHeight,
+            windowWidth: previewWidth,
+            backgroundColor: window.getComputedStyle(preview).backgroundColor,
             onclone: function(clonedDoc) {
+                // 隐藏 loading 遮罩层，避免被截图进去
+                const loadingOverlay = clonedDoc.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+                // 强制设置克隆元素的宽度，确保与原始宽度一致
                 const clonedPreview = clonedDoc.getElementById('preview');
                 if (clonedPreview) {
-                    // 移除所有高度和宽度限制，让内容完全展开
-                    clonedPreview.style.height = 'auto';
-                    clonedPreview.style.maxHeight = 'none';
-                    clonedPreview.style.maxWidth = 'none';
-                    clonedPreview.style.overflow = 'visible';
+                    clonedPreview.style.width = previewWidth + 'px';
+                    clonedPreview.style.maxWidth = previewWidth + 'px';
                 }
-                const clonedWrapper = clonedDoc.querySelector('.preview-content-wrapper');
-                if (clonedWrapper) {
-                    clonedWrapper.style.height = 'auto';
-                    clonedWrapper.style.maxHeight = 'none';
-                    clonedWrapper.style.overflow = 'visible';
+                const clonedBody = clonedDoc.querySelector('.markdown-body');
+                if (clonedBody) {
+                    // 移除边框和阴影
+                    clonedBody.style.borderLeft = 'none';
+                    clonedBody.style.borderRight = 'none';
+                    clonedBody.style.boxShadow = 'none';
                 }
             }
         }).then(canvas => {
@@ -3665,8 +5005,10 @@ erDiagram
             link.download = fileName.replace(/\.md$/, '') + ".png";
             link.href = canvas.toDataURL();
             link.click();
+            hideLoadingOverlay();
             showToast('图片导出成功！');
         }).catch(err => {
+            hideLoadingOverlay();
             console.error('导出图片失败:', err);
             showToast('导出图片失败', 'error');
         });
@@ -3677,12 +5019,17 @@ erDiagram
         const fileName = document.getElementById("currentFileName").textContent || "document";
         const htmlFileName = fileName.replace(/\.md$/, '') + '.html';
 
+        // HTML 转义标题，防止 XSS
+        const rawTitle = editor.value.split('\n')[0].replace(/#/g, '').trim() || 'Document';
+        const safeTitle = rawTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
         const htmlContent = `<!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>${editor.value.split('\n')[0].replace(/#/g, '').trim() || 'Document'}</title>
+    <title>${safeTitle}</title>
     <link rel="stylesheet" href="assets/css/github-markdown-light.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/katex.min.css">
     <style>
         body {
             margin: 0;
@@ -3730,7 +5077,7 @@ erDiagram
     /* 切换工具栏显示/隐藏 */
     function toggleToolbar() {
         isToolbarVisible = !isToolbarVisible;
-        localStorage.setItem("mdEditor_toolbarVisible", isToolbarVisible ? "true" : "false");
+        Storage.setBool('toolbarVisible', isToolbarVisible);
 
         const editorToolbar = document.getElementById("editorToolbar");
         const previewToolbar = document.getElementById("previewToolbar");
@@ -3756,7 +5103,7 @@ erDiagram
     /* 切换状态栏显示/隐藏 */
     function toggleFootBar() {
         isFootBarVisible = !isFootBarVisible;
-        localStorage.setItem("mdEditor_footBarVisible", isFootBarVisible ? "true" : "false");
+        Storage.setBool('footBarVisible', isFootBarVisible);
 
         const footBars = document.querySelectorAll(".foot-bar");
         const switchEl = document.getElementById("switch-footbar");
@@ -3777,7 +5124,7 @@ erDiagram
     /* 切换同步滚动 */
     function toggleSyncScrollSetting() {
         isSyncScroll = !isSyncScroll;
-        localStorage.setItem("mdEditor_syncScroll", isSyncScroll ? "true" : "false");
+        Storage.setBool('syncScroll', isSyncScroll);
 
         // 更新预览区域的同步滚动按钮状态
         const syncScrollBtn = document.getElementById("tb-syncScroll");
@@ -3795,7 +5142,7 @@ erDiagram
     /* 切换粘贴图片为Base64 */
     function togglePasteImageAsBase64() {
         pasteImageAsBase64 = !pasteImageAsBase64;
-        localStorage.setItem("mdEditor_pasteImageAsBase64", pasteImageAsBase64 ? "true" : "false");
+        Storage.setBool('pasteImageAsBase64', pasteImageAsBase64);
 
         const switchEl = document.getElementById("paste-image-base64");
         if (pasteImageAsBase64) {
@@ -3870,35 +5217,33 @@ erDiagram
 
     /* 显示 About 模态框 */
     function showAboutModal() {
-        const modal = document.getElementById('aboutModal');
-        modal.classList.add('show');
+        const modalEl = document.getElementById('aboutModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
     }
 
     /* 隐藏 About 模态框 */
     function hideAboutModal() {
-        const modal = document.getElementById('aboutModal');
-        modal.classList.remove('show');
+        const modalEl = document.getElementById('aboutModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
     }
-
-    // 点击模态框外部关闭
-    document.getElementById('aboutModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            hideAboutModal();
-        }
-    });
-
-    // 模态框上监听 ESC 键关闭
-    document.getElementById('aboutModal').addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            hideAboutModal();
-        }
-    });
 
     /* 快捷键监听 */
     document.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
             saveFile();
+        } else if (e.ctrlKey && e.key === 'h') {
+            e.preventDefault();
+            openReplacePanel();
+        } else if (e.key === 'F3') {
+            e.preventDefault();
+            if (e.shiftKey) {
+                findPrevious();
+            } else {
+                findNext();
+            }
         }
     });
 </script>

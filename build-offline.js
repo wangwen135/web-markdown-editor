@@ -5,51 +5,55 @@ const path = require('path');
 const replacementRules = [
     // HTML head 部分 - 样式和脚本
     {
-        from: '<link id="markdownTheme" rel="stylesheet"\n          href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">',
+        from: '<link id="markdownTheme" rel="stylesheet"\n          href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css">',
         to: '<link id="markdownTheme" rel="stylesheet"\n          href="assets/css/github-markdown-light.css">'
     },
     {
-        from: '<link rel="stylesheet" id="codeTheme"\n          href="https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css">',
+        from: '<link rel="stylesheet" id="codeTheme"\n          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">',
         to: '<link rel="stylesheet" id="codeTheme"\n          href="assets/css/highlight/github-light.css">'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/highlight.js/highlight.min.js"></script>',
+        from: '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>',
         to: '<script src="assets/js/highlight.min.js"></script>'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>',
+        from: '<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>',
         to: '<script src="assets/js/marked.min.js"></script>'
     },
     {
-        from: '<link rel="stylesheet"\n          href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">',
+        from: '<link rel="stylesheet"\n          href="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/katex.min.css">',
         to: '<link rel="stylesheet"\n          href="assets/css/katex.min.css">'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>',
+        from: '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/katex.min.js"></script>',
         to: '<script src="assets/js/katex.min.js"></script>'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js"></script>',
+        from: '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/contrib/auto-render.min.js"></script>',
         to: '<script src="assets/js/katex-auto-render.min.js"></script>'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
+        from: '<script src="https://cdn.jsdelivr.net/npm/mermaid@11.13.0/dist/mermaid.min.js"></script>',
         to: '<script src="assets/js/mermaid.min.js"></script>'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/html2pdf.js/dist/html2pdf.bundle.min.js"></script>',
+        from: '<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js"></script>',
         to: '<script src="assets/js/html2pdf.bundle.min.js"></script>'
     },
     {
-        from: '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">',
+        from: '<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>',
+        to: '<script src="assets/js/purify.min.js"></script>'
+    },
+    {
+        from: '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">',
         to: '<link href="assets/css/bootstrap.min.css" rel="stylesheet">'
     },
     {
-        from: '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">',
+        from: '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">',
         to: '<link href="assets/css/bootstrap-icons.css" rel="stylesheet">'
     },
     {
-        from: '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>',
+        from: '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>',
         to: '<script src="assets/js/bootstrap.bundle.min.js"></script>'
     },
     {
@@ -61,18 +65,18 @@ const replacementRules = [
 // JavaScript themes 对象中的 CDN 路径映射（使用正则）
 const themeUrlMappings = {
     // GitHub Markdown CSS
-    'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css': 'assets/css/github-markdown-light.css',
-    'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css': 'assets/css/github-markdown-dark.css',
+    'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css': 'assets/css/github-markdown-light.css',
+    'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css': 'assets/css/github-markdown-dark.css',
 
-    // Highlight.js 主题
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css': 'assets/css/highlight/github-light.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/github-dark.min.css': 'assets/css/highlight/github-dark.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/solarized-light.min.css': 'assets/css/highlight/solarized-light.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/solarized-dark.min.css': 'assets/css/highlight/solarized-dark.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/atom-one-dark.min.css': 'assets/css/highlight/atom-one-dark.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/vs2015.min.css': 'assets/css/highlight/vs2015.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/nord.min.css': 'assets/css/highlight/nord.css',
-    'https://cdn.jsdelivr.net/npm/highlight.js/styles/monokai.min.css': 'assets/css/highlight/monokai.css',
+    // Highlight.js 主题 (11.11.1)
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css': 'assets/css/highlight/github-light.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github-dark.min.css': 'assets/css/highlight/github-dark.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/solarized-light.min.css': 'assets/css/highlight/solarized-light.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/solarized-dark.min.css': 'assets/css/highlight/solarized-dark.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/atom-one-dark.min.css': 'assets/css/highlight/atom-one-dark.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/vs2015.min.css': 'assets/css/highlight/vs2015.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/nord.min.css': 'assets/css/highlight/nord.css',
+    'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/monokai.min.css': 'assets/css/highlight/monokai.css',
 };
 
 function buildOffline() {

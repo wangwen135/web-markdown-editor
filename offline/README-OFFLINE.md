@@ -70,13 +70,14 @@ offline/
 | 库名 | 版本 | 用途 |
 |------|------|------|
 | Marked.js | 12.0.0 | Markdown 解析 |
-| Highlight.js | 9.15.1 | 代码语法高亮 |
-| KaTeX | 0.16.10 | 数学公式渲染 |
-| Mermaid | 10.9.0 | 图表绘制 |
-| html2pdf.js | 0.10.1 | PDF 导出 |
+| Highlight.js | 11.9.0 / 11.11.1 (主题) | 代码语法高亮 |
+| KaTeX | 0.16.43 | 数学公式渲染 |
+| Mermaid | 11.13.0 | 图表绘制 |
+| html2pdf.js | 0.14.0 | PDF 导出 |
+| DOMPurify | 3.2.6 | XSS 防护 |
 | html2canvas | 1.4.1 | 图片导出 |
-| Bootstrap | 5.3.0 | UI 框架 |
-| Bootstrap Icons | 1.11.0 | 图标字体 |
-| GitHub Markdown CSS | 5.6.0 | Markdown 样式 |
+| Bootstrap | 5.3.8 | UI 框架 |
+| Bootstrap Icons | 1.13.1 | 图标字体 |
+| GitHub Markdown CSS | 5.9.0 | Markdown 样式 |
 
 

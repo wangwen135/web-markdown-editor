@@ -2,41 +2,44 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>Web Markdown Editor</title>
+    <title>Web Markdown 编辑器</title>
     <!-- Favicon: 内联 SVG -->
     <link rel="icon"
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' x='.05em' font-size='100'>M</text></svg>">
 
     <!-- Markdown 样式 -->
     <link id="markdownTheme" rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
+          href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css">
 
     <!-- 代码高亮 -->
     <link rel="stylesheet" id="codeTheme"
-          href="https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js/highlight.min.js"></script>
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <!-- Marked -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
 
     <!-- KaTeX -->
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js"></script>
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/contrib/auto-render.min.js"></script>
 
     <!-- Mermaid -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.13.0/dist/mermaid.min.js"></script>
 
     <!-- PDF -->
-    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js/dist/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js"></script>
+
+    <!-- DOMPurify - XSS 防护 -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <!-- html2canvas for download -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -355,16 +358,6 @@
             border-color: #238636;
         }
 
-        /* Bootstrap 工具类 */
-        .ms-auto {
-            margin-left: auto;
-        }
-
-        .mx-1 {
-            margin-left: 4px;
-            margin-right: 4px;
-        }
-
         /* 下拉菜单项样式 */
         .dropdown-item {
             padding: 8px 16px;
@@ -399,19 +392,12 @@
 
         /* 颜色选择器菜单项 */
         .editor-bg-color,
+        #editor-color-dropdown .dropdown-item,
         #tb-color-dropdown .dropdown-item {
             padding: 12px 16px;
             font-size: 14px;
             border: 2px solid transparent;
-            background: transparent;
             transition: border-color 0.2s;
-        }
-
-        /* 颜色选择器hover效果 - 使用边框而不是背景色 */
-        #tb-color-dropdown .dropdown-item:hover,
-        .editor-bg-color:hover {
-            border-color: #228be6 !important;
-            background: transparent !important;
         }
 
         /* 主题选择器菜单项也使用边框hover */
@@ -421,14 +407,6 @@
 
         #theme-dropdown .dropdown-item:hover {
             border-color: #228be6 !important;
-        }
-
-        .text-black-50 {
-            color: rgba(0, 0, 0, 0.5);
-        }
-
-        .d-inline-block {
-            display: inline-block;
         }
 
         /* 暗色主题下的文本颜色 */
@@ -489,7 +467,7 @@
         .toc {
             width: 220px;
             overflow: auto;
-            padding: 10px;
+            padding: 10px 0 10px 10px;
             background: #fafafa;
             flex-shrink: 0;
         }
@@ -663,17 +641,6 @@
             margin-left: 2.5rem;
         }
 
-        .editor {
-            width: 100%;
-            border: none;
-            padding: 16px;
-            resize: none;
-            outline: none;
-            font-family: monospace;
-            flex: 1;
-            overflow: auto;
-        }
-
         .preview-wrapper {
             width: 50%;
             display: flex;
@@ -712,6 +679,10 @@
             flex-direction: column;
             flex-shrink: 0;
             background: #ddd;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         /* 拖动条顶部按钮 */
@@ -772,13 +743,6 @@
             background: #484f58;
         }
 
-        .resizer-container {
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
         .dark {
             background: #0d1117;
             color: #c9d1d9;
@@ -809,10 +773,6 @@
             /* 深色模式下的内容宽度边框 */
             border-left-color: #30363d;
             border-right-color: #30363d;
-        }
-
-        .dark .resizer {
-            background: #30363d;
         }
 
         /* 滚动条样式 - 浅色模式 */
@@ -1172,34 +1132,7 @@
             justify-content: center;
         }
 
-        #darkModeBtn i {
-            font-size: 16px;
-        }
-
         /* 主题下拉框 */
-        #themeSelect {
-            font-size: 13px;
-            padding: 4px 8px;
-            border: 1px solid #d0d7de;
-        }
-
-        .dark #themeSelect {
-            border-color: #30363d;
-        }
-
-        /* 下拉菜单active状态 */
-        .dropdown-item.active {
-            background: #e2e3e5;
-        }
-
-        .dark .dropdown-item.active {
-            background: #30363d;
-        }
-
-        #darkModeBtn i {
-            font-size: 16px;
-        }
-
         #themeSelect {
             font-size: 13px;
             padding: 6px 12px;
@@ -1481,15 +1414,21 @@
             background-color: #343a40;
         }
 
-        /* 恢复所有下拉菜单中按钮的 hover 效果 */
-        .dropdown-menu .btn.dropdown-item:hover,
-        .dropdown-menu .btn-control.dropdown-item:hover {
+        /* 恢复所有下拉菜单中按钮的 hover 效果（排除颜色选择器） */
+        .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn.dropdown-item:hover,
+        .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn-control.dropdown-item:hover {
             background-color: #e9ecef !important;
         }
 
-        .dark .dropdown-menu .btn.dropdown-item:hover,
-        .dark .dropdown-menu .btn-control.dropdown-item:hover {
+        .dark .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn.dropdown-item:hover,
+        .dark .dropdown-menu:not(#editor-color-dropdown):not(#tb-color-dropdown) .btn-control.dropdown-item:hover {
             background-color: #343a40 !important;
+        }
+
+        /* 颜色选择器 hover - 只显示边框 */
+        #editor-color-dropdown .dropdown-item:hover,
+        #tb-color-dropdown .dropdown-item:hover {
+            border-color: #228be6 !important;
         }
 
         /* 查找替换浮动面板样式 */
@@ -1743,7 +1682,7 @@ MIT License
                 <a href="https://github.com/wangwen135/web-markdown-editor" target="_blank" class="btn btn-primary">
                     <i class="bi bi-github"></i> GitHub
                 </a>
-                <button type="button" class="btn btn-secondary" onclick="hideAboutModal()">关闭</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
             </div>
         </div>
     </div>
@@ -1864,7 +1803,7 @@ MIT License
     </div>
     <div class="panel-body">
         <div class="find-replace-row">
-            <input type="text" id="find-input" class="find-replace-input" placeholder="查找内容">
+            <input type="text" id="find-input" class="find-replace-input" placeholder="查找内容" aria-label="查找内容">
             <button class="find-replace-btn" onclick="findPrevious()" title="上一个 (Shift+F3)">◀</button>
             <button class="find-replace-btn" onclick="findNext()" title="下一个 (F3)">▶</button>
         </div>
@@ -1872,7 +1811,7 @@ MIT License
             <span class="find-replace-info">第 <span id="find-current">0</span> 个/共 <span id="find-total">0</span> 个</span>
         </div>
         <div class="find-replace-row">
-            <input type="text" id="replace-input" class="find-replace-input" placeholder="替换为">
+            <input type="text" id="replace-input" class="find-replace-input" placeholder="替换为" aria-label="替换为">
             <button class="find-replace-btn" onclick="replaceCurrent()">替换</button>
             <button class="find-replace-btn" onclick="replaceAll()">全部替换</button>
         </div>
@@ -1881,7 +1820,7 @@ MIT License
 </div>
 
 <div class="container">
-    <div class="toc" id="toc"></div>
+    <div class="toc" id="toc" aria-label="目录"></div>
 
     <!-- 目录拖拽手柄 -->
     <div class="toc-resizer" id="tocResizer" title="拖拽调整目录宽度"></div>
@@ -2094,10 +2033,10 @@ MIT License
             </div>
         </div>
         <div class="editor-area">
-            <div class="line-numbers" id="lineNumbers">
+            <div class="line-numbers" id="lineNumbers" aria-hidden="true">
                 <span class="selected">1</span>
             </div>
-            <textarea id="editor" class="editor"></textarea>
+            <textarea id="editor" class="editor" aria-label="Markdown 编辑器"></textarea>
         </div>
         <div class="foot-bar">
             <span>字符：<b id="charCount">0</b></span>
@@ -2109,13 +2048,13 @@ MIT License
     <!-- 拖动条 -->
     <div class="resizer-container">
         <!-- 顶部按钮：隐藏工具栏 -->
-        <div class="resizer-top" id="resizerTop" title="隐藏工具栏">
+        <div class="resizer-top" id="resizerTop" title="隐藏工具栏" role="separator" tabindex="0" aria-label="隐藏工具栏">
             <i class="bi bi-chevron-up" id="resizerTopIcon"></i>
         </div>
         <!-- 中间点击区域：折叠/展开预览 -->
-        <div class="resizer-mid" id="resizerMid" title="折叠/展开预览区域"></div>
+        <div class="resizer-mid" id="resizerMid" title="折叠/展开预览区域" role="separator" tabindex="0" aria-label="折叠或展开预览区域"></div>
         <!-- 底部按钮：隐藏状态栏 -->
-        <div class="resizer-bottom" id="resizerBottom" title="隐藏状态栏">
+        <div class="resizer-bottom" id="resizerBottom" title="隐藏状态栏" role="separator" tabindex="0" aria-label="隐藏状态栏">
             <i class="bi bi-chevron-down" id="resizerBottomIcon"></i>
         </div>
     </div>
@@ -2405,7 +2344,15 @@ sequenceDiagram
             return value !== null ? value : defaultValue;
         },
         set(key, value) {
-            localStorage.setItem(this.PREFIX + key, value);
+            try {
+                localStorage.setItem(this.PREFIX + key, value);
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('localStorage 配额已满，无法保存:', key);
+                } else {
+                    throw e;
+                }
+            }
         },
         getBool(key, defaultVal = false) {
             const val = this.get(key);
@@ -2448,50 +2395,50 @@ sequenceDiagram
     const themes = {
         'github': {
             name: 'GitHub',
-            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css',
-            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css',
-            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css',
-            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/github-dark.min.css',
+            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css',
+            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css',
+            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css',
+            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github-dark.min.css',
             hasDarkVariant: true
         },
         'solarized': {
             name: 'Solarized',
-            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css',
-            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css',
-            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/solarized-light.min.css',
-            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/solarized-dark.min.css',
+            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css',
+            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css',
+            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/solarized-light.min.css',
+            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/solarized-dark.min.css',
             hasDarkVariant: true
         },
         'atom-one-dark': {
             name: 'Atom One Dark',
-            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css',
-            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css',
-            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css',
-            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/atom-one-dark.min.css',
+            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css',
+            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css',
+            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css',
+            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/atom-one-dark.min.css',
             hasDarkVariant: false
         },
         'vscode': {
             name: 'VS Code',
-            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css',
-            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css',
-            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css',
-            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/vs2015.min.css',
+            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css',
+            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css',
+            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css',
+            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/vs2015.min.css',
             hasDarkVariant: false
         },
         'nord': {
             name: 'Nord',
-            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css',
-            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css',
-            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css',
-            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/nord.min.css',
+            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css',
+            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css',
+            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css',
+            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/nord.min.css',
             hasDarkVariant: false
         },
         'monokai': {
             name: 'Monokai',
-            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css',
-            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown-dark.min.css',
-            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/github.min.css',
-            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js/styles/monokai.min.css',
+            markdownLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css',
+            markdownDark: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown-dark.min.css',
+            codeLight: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css',
+            codeDark: 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/monokai.min.css',
             hasDarkVariant: false
         }
     };
@@ -2522,6 +2469,9 @@ sequenceDiagram
 
     // 标题映射表：预览标题元素 ↔ 编辑器行号
     let headingMap = [];
+
+    // 块级元素滚动映射表：预览块级元素 ↔ 编辑器行号（用于同步滚动）
+    let scrollMap = [];
 
     // 获取行号元素
     const lineNumbers = document.getElementById("lineNumbers");
@@ -2608,8 +2558,11 @@ sequenceDiagram
 
                 // 应用颜色
                 const editorTextarea = document.getElementById("editor");
-                const lineNumbers = document.getElementById("lineNumbers");
+                const lineNumEl = document.getElementById("lineNumbers");
                 const bgColorBtn = document.getElementById("tb-bgColor");
+
+                editorTextarea.style.backgroundColor = color;
+                lineNumEl.style.backgroundColor = color;
 
                 editorTextarea.style.backgroundColor = color;
                 lineNumbers.style.backgroundColor = color;
@@ -2653,7 +2606,7 @@ sequenceDiagram
                 button.classList.add(colorItem.bootstrapClass);
             }
             if (colorItem.color && !colorItem.bootstrapClass) {
-                button.style.backgroundColor = colorItem.color;
+                button.style.setProperty('background-color', colorItem.color, 'important');
             }
 
             button.textContent = colorItem.name;
@@ -2687,11 +2640,11 @@ sequenceDiagram
 
         if (savedColor !== null) {
             const editorTextarea = document.getElementById("editor");
-            const lineNumbers = document.getElementById("lineNumbers");
+            const lineNumEl = document.getElementById("lineNumbers");
             const bgColorBtn = document.getElementById("tb-bgColor");
 
             editorTextarea.style.backgroundColor = savedColor;
-            lineNumbers.style.backgroundColor = savedColor;
+            lineNumEl.style.backgroundColor = savedColor;
             bgColorBtn.style.backgroundColor = savedColor || "";
         }
     }
@@ -2973,18 +2926,40 @@ erDiagram
 \`\`\``
     };
 
+    // execCommand 已废弃，使用带回退的辅助函数
+    // 优先使用 execCommand 以保留撤销历史，失败时回退到 setRangeText
+    function execInsertText(textEl, text) {
+        textEl.focus();
+        try {
+            const success = document.execCommand('insertText', false, text);
+            if (success) return;
+        } catch (e) { /* execCommand 不可用 */ }
+        // 回退：使用 setRangeText（不支持撤销，但功能正常）
+        const start = textEl.selectionStart;
+        textEl.setRangeText(text, start, textEl.selectionEnd, 'end');
+    }
+
+    function execDelete(textEl) {
+        textEl.focus();
+        try {
+            const success = document.execCommand('delete');
+            if (success) return;
+        } catch (e) { /* execCommand 不可用 */ }
+        // 回退：手动删除选中内容
+        const start = textEl.selectionStart;
+        const end = textEl.selectionEnd;
+        if (start !== end) {
+            textEl.setRangeText('', start, end, 'end');
+        }
+    }
+
     function insertFlowchart(type) {
         const template = flowchartTemplates[type];
         if (!template) return;
 
         // 使用 execCommand 插入文本，支持撤销
         editor.focus();
-        const success = document.execCommand('insertText', false, template + '\n');
-
-        // 如果 execCommand 失败，使用传统方式
-        if (!success) {
-            insertTextAtLineStart(template + '\n');
-        }
+        execInsertText(editor, template + '\n');
 
         render();
     }
@@ -3016,7 +2991,7 @@ erDiagram
         editor.focus();
 
         // 使用浏览器的删除命令，这样可以使用 Ctrl+Z 撤销
-        document.execCommand('delete');
+        execDelete(editor);
 
         // 更新行号和状态栏（使用防抖延迟更新，确保删除操作完成）
         setTimeout(() => {
@@ -3028,9 +3003,7 @@ erDiagram
 
     /* 在光标位置插入文本 */
     function insertText(text) {
-        editor.focus();
-        // 使用 execCommand 支持撤销
-        document.execCommand('insertText', false, text);
+        execInsertText(editor, text);
         updateLineNumbers();
         updateEditorFootBar();
         debouncedRender();  // 使用防抖渲染
@@ -3052,7 +3025,7 @@ erDiagram
         editor.focus();
 
         // 使用 execCommand 支持撤销
-        document.execCommand('insertText', false, newText);
+        execInsertText(editor, newText);
 
         // 调整光标位置（在结束标记之前）
         const newCursorPos = start + before.length + selected.length;
@@ -3080,7 +3053,7 @@ erDiagram
         editor.focus();
 
         // 使用 execCommand 支持撤销
-        document.execCommand('insertText', false, text);
+        execInsertText(editor, text);
 
         // 移动光标到插入文本的末尾
         const newPos = lineStart + text.length;
@@ -3522,53 +3495,129 @@ erDiagram
     });
 
     // 编辑器滚动事件 - 同步行号和预览
+    // 缓存编辑器行高计算（避免滚动时重复调用 getComputedStyle）
+    let cachedLineHeight = 0;
+    let cachedLineHeightFontSize = 0;
+    function getEditorLineHeight() {
+        const editorStyle = window.getComputedStyle(editor);
+        const fontSize = parseFloat(editorStyle.fontSize);
+        if (fontSize !== cachedLineHeightFontSize) {
+            cachedLineHeightFontSize = fontSize;
+            cachedLineHeight = parseFloat(editorStyle.lineHeight) || (fontSize * 1.8);
+        }
+        return cachedLineHeight;
+    }
+
     const handleEditorScroll = () => {
         // 行号滚动同步（立即执行，无延迟）
         lineNumbers.scrollTop = editor.scrollTop;
 
-        // 预览区滚动同步（基于 headingMap 精确匹配）
-        if (isSyncScroll && previewContentWrapper && headingMap.length > 0) {
-            // 计算编辑器当前可见区域对应的行号
-            const editorStyle = window.getComputedStyle(editor);
-            const fontSize = parseFloat(editorStyle.fontSize);
-            const lineHeight = parseFloat(editorStyle.lineHeight) || (fontSize * 1.8);
-            const currentLine = Math.round(editor.scrollTop / lineHeight) + 1;
+        const lineHeight = getEditorLineHeight();
+        const currentLine = Math.round(editor.scrollTop / lineHeight) + 1;
 
-            // 在 headingMap 中找到对应的预览元素
-            let targetElement = null;
-            for (let i = 0; i < headingMap.length; i++) {
-                if (headingMap[i].lineNum && currentLine >= headingMap[i].lineNum) {
-                    targetElement = headingMap[i].element;
+        // 预览区滚动同步（基于 scrollMap 块级元素映射）
+        if (isSyncScroll && previewContentWrapper && scrollMap.length > 0) {
+            // 在 scrollMap 中用二分查找找到当前行对应的块级元素
+            let targetIndex = -1;
+            let lo = 0, hi = scrollMap.length - 1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                if (scrollMap[mid].lineNum <= currentLine) {
+                    targetIndex = mid;
+                    lo = mid + 1;
                 } else {
-                    break;
+                    hi = mid - 1;
                 }
             }
 
-            // 滚动预览区到对应元素
-            if (targetElement) {
+            if (targetIndex >= 0) {
+                const targetElement = scrollMap[targetIndex].element;
+
+                // 防御：元素已脱离 DOM（如 mermaid 重新渲染导致旧引用失效）
+                if (!targetElement.isConnected) return;
+
+                const targetLineNum = scrollMap[targetIndex].lineNum;
+
+                // 计算编辑器在当前块内的滚动进度
+                let nextLineNum = Infinity;
+                if (targetIndex + 1 < scrollMap.length) {
+                    nextLineNum = scrollMap[targetIndex + 1].lineNum;
+                }
+                const progress = (currentLine - targetLineNum) / Math.max(1, nextLineNum - targetLineNum);
+
+                // 计算目标元素的滚动位置，加上块内进度偏移
                 const containerRect = previewContentWrapper.getBoundingClientRect();
                 const elementRect = targetElement.getBoundingClientRect();
                 const relativeTop = elementRect.top - containerRect.top + previewContentWrapper.scrollTop;
 
-                // 将目标元素滚动到可视区域顶部附近
-                const offsetTop = relativeTop - 60; // 留出顶部空间
+                // 预览区对应下一个元素的位置
+                let nextElementTop = relativeTop + targetElement.offsetHeight;
+                if (targetIndex + 1 < scrollMap.length && scrollMap[targetIndex + 1].element.isConnected) {
+                    const nextRect = scrollMap[targetIndex + 1].element.getBoundingClientRect();
+                    nextElementTop = nextRect.top - containerRect.top + previewContentWrapper.scrollTop;
+                }
+
+                // 按进度插值计算目标滚动位置
+                const interpolatedTop = relativeTop + (nextElementTop - relativeTop) * progress;
+                const offsetTop = interpolatedTop - 60; // 留出顶部空间
                 previewContentWrapper.scrollTop = offsetTop > 0 ? offsetTop : 0;
             }
         }
 
         // 目录高亮（立即执行）
         if (isTOCVisible) {
-            const editorStyle = window.getComputedStyle(editor);
-            const fontSize = parseFloat(editorStyle.fontSize);
-            const lineHeight = parseFloat(editorStyle.lineHeight) || (fontSize * 1.8);
-            const currentLine = Math.round(editor.scrollTop / lineHeight) + 1;
-
             highlightTOCItem(currentLine);
         }
     };
 
     // 使用节流包装滚动处理（16ms ≈ 60fps）
     editor.addEventListener("scroll", throttle(handleEditorScroll, 16));
+
+    // 预览区滚动时联动 TOC 高亮（纯预览模式下 editor 不触发 scroll 事件）
+    const handlePreviewScroll = () => {
+        if (!isTOCVisible || headingMap.length === 0) return;
+
+        const containerRect = previewContentWrapper.getBoundingClientRect();
+        const triggerLine = containerRect.top + 80; // 距顶部 80px 的位置作为判定线
+
+        // 找到判定线上方最后一个标题元素
+        let activeIndex = -1;
+        for (let i = 0; i < headingMap.length; i++) {
+            const el = headingMap[i].element;
+            if (!el.isConnected) continue;
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= triggerLine) {
+                activeIndex = i;
+            } else {
+                break;
+            }
+        }
+
+        if (activeIndex !== lastActiveTOCIndex) {
+            if (!tocUpdatePending) {
+                tocUpdatePending = true;
+                requestAnimationFrame(() => {
+                    const tocItems = toc.querySelectorAll(".toc-item");
+                    if (lastActiveTOCIndex >= 0 && tocItems[lastActiveTOCIndex]) {
+                        tocItems[lastActiveTOCIndex].classList.remove("toc-item-active");
+                    }
+                    if (activeIndex >= 0 && tocItems[activeIndex]) {
+                        tocItems[activeIndex].classList.add("toc-item-active");
+                        // TOC 滚动跟随：确保选中项可见
+                        const item = tocItems[activeIndex];
+                        const tocRect = toc.getBoundingClientRect();
+                        const itemRect = item.getBoundingClientRect();
+                        if (itemRect.top < tocRect.top || itemRect.bottom > tocRect.bottom) {
+                            toc.scrollTop += itemRect.top - tocRect.top - tocRect.height / 3;
+                        }
+                    }
+                    lastActiveTOCIndex = activeIndex;
+                    tocUpdatePending = false;
+                });
+            }
+        }
+    };
+    previewContentWrapper.addEventListener("scroll", throttle(handlePreviewScroll, 16));
 
     // 编辑器光标位置更新
     const debouncedUpdateCursorInfo = debounce(updateCursorInfo, 50);
@@ -3631,39 +3680,68 @@ erDiagram
             return `MATH_INLINE_${mathIndex++}_PLACEHOLDER`;
         });
 
-        // 渲染 Markdown
-        preview.innerHTML = marked.parse(content, {breaks: true});
+        // 渲染 Markdown + XSS 防护（单次 innerHTML 赋值）
+        try {
+            let html = marked.parse(content, {breaks: true});
+            // 使用 DOMPurify 清理 HTML，防止 XSS
+            if (typeof DOMPurify !== 'undefined') {
+                html = DOMPurify.sanitize(html, {ADD_TAGS: ['mermaid'], ADD_ATTR: ['target']});
+            }
 
-        // 恢复数学公式
-        preview.innerHTML = preview.innerHTML.replace(/MATH_BLOCK_(\d+)_PLACEHOLDER/g, (match, index) => {
-            const formula = mathBlocks[parseInt(index)];
-            return `<span class="math-display">$$${formula}$$</span>`;
-        });
-        preview.innerHTML = preview.innerHTML.replace(/MATH_INLINE_(\d+)_PLACEHOLDER/g, (match, index) => {
-            const formula = mathBlocks[parseInt(index)];
-            return `<span class="math-inline">$${formula}$</span>`;
-        });
+            // 恢复数学公式（在字符串中替换，避免多次 innerHTML）
+            html = html.replace(/MATH_BLOCK_(\d+)_PLACEHOLDER/g, (match, index) => {
+                const formula = mathBlocks[parseInt(index)];
+                return `<span class="math-display">$$${formula}$$</span>`;
+            });
+            html = html.replace(/MATH_INLINE_(\d+)_PLACEHOLDER/g, (match, index) => {
+                const formula = mathBlocks[parseInt(index)];
+                return `<span class="math-inline">$${formula}$</span>`;
+            });
+
+            preview.innerHTML = html;
+        } catch (e) {
+            console.error('Markdown 渲染失败:', e);
+        }
 
         generateTOC();
-        preview.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightBlock(block);
-        });
+
+        // 代码高亮
+        try {
+            preview.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        } catch (e) {
+            console.error('代码高亮失败:', e);
+        }
 
         // 渲染数学公式
-        renderMathInElement(preview, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false},
-                {left: '\\[', right: '\\]', display: true},
-                {left: '\\(', right: '\\)', display: false}
-            ],
-            throwOnError: false
+        try {
+            renderMathInElement(preview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false
+            });
+        } catch (e) {
+            console.error('KaTeX 渲染失败:', e);
+        }
+
+        try {
+            renderMermaid();
+        } catch (e) {
+            console.error('Mermaid 渲染失败:', e);
+        }
+
+        // 构建块级元素到行号的滚动映射表
+        // 必须在所有 DOM 变更（特别是 mermaid 的 replaceWith）完成后执行
+        // 使用 requestAnimationFrame 确保 mermaid 异步渲染完成后元素高度正确
+        requestAnimationFrame(() => {
+            buildScrollMap();
+            updatePreviewFootBar();
         });
-
-        renderMermaid();
-
-        // 更新预览区域底部统计
-        updatePreviewFootBar();
     }
 
     render();
@@ -3693,13 +3771,11 @@ erDiagram
 
     /* 高亮当前光标位置对应的目录条目 */
     function highlightTOCItem(line) {
-        // 找到当前行对应的标题（从 headingMap 中查找）
+        // 找到当前行对应的标题（遍历所有条目找最后一个匹配项）
         let activeIndex = -1;
         for (let i = 0; i < headingMap.length; i++) {
             if (headingMap[i].lineNum !== null && line >= headingMap[i].lineNum) {
                 activeIndex = i;
-            } else {
-                break;
             }
         }
 
@@ -3722,6 +3798,13 @@ erDiagram
                 // 添加新的激活状态
                 if (activeIndex >= 0 && tocItems[activeIndex]) {
                     tocItems[activeIndex].classList.add("toc-item-active");
+                    // TOC 滚动跟随：确保选中项可见
+                    const item = tocItems[activeIndex];
+                    const tocRect = toc.getBoundingClientRect();
+                    const itemRect = item.getBoundingClientRect();
+                    if (itemRect.top < tocRect.top || itemRect.bottom > tocRect.bottom) {
+                        toc.scrollTop += itemRect.top - tocRect.top - tocRect.height / 3;
+                    }
                 }
 
                 lastActiveTOCIndex = activeIndex;
@@ -3839,14 +3922,13 @@ erDiagram
         setPreviewWidth("1020px", middleBtn);
     }
 
+    // 保存编辑器/预览的分割比例，避免切换模式时丢失
+    // 必须在 setEditMode() 调用之前声明
+    let savedEditorWidth = "50%";
+    let savedPreviewWidth = "50%";
+
     // 初始化编辑模式（设置初始状态的内联样式）
     setEditMode();
-
-    // 修改 render 函数以更新预览状态栏
-    const originalRender = render;
-    render = function() {
-        originalRender();
-    };
 
     /* Mermaid */
     function renderMermaid() {
@@ -3857,7 +3939,133 @@ erDiagram
             div.innerHTML = el.textContent;
             parent.replaceWith(div);
         });
-        mermaid.init(undefined, preview.querySelectorAll(".mermaid"));
+        const mermaidElements = preview.querySelectorAll(".mermaid");
+        if (mermaidElements.length > 0) {
+            if (typeof mermaid.run === 'function') {
+                mermaid.run({nodes: mermaidElements});
+            } else {
+                mermaid.init(undefined, mermaidElements);
+            }
+        }
+    }
+
+    /* 构建块级元素滚动映射表 */
+    function buildScrollMap() {
+        scrollMap = [];
+        // 预览区所有直接子块级元素
+        const children = preview.children;
+        const editorLines = editor.value.split('\n');
+
+        let editorScanLine = 0; // 当前扫描到的编辑器行（0-based）
+
+        for (let i = 0; i < children.length; i++) {
+            const el = children[i];
+            const tag = el.tagName;
+
+            // 跳过 script/style
+            if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+
+            // 获取该元素对应的编辑器行号
+            let lineNum = findSourceLine(el, editorLines, editorScanLine);
+
+            if (lineNum !== null) {
+                editorScanLine = lineNum + 1; // 推进扫描位置到下一行
+                scrollMap.push({
+                    element: el,
+                    lineNum: lineNum + 1 // 转为 1-based，与 headingMap 一致
+                });
+            }
+        }
+    }
+
+    /* 通过元素文本内容在编辑器中查找对应的源行号 */
+    function findSourceLine(el, editorLines, startLine) {
+        const elText = (el.textContent || '').trim().substring(0, 100);
+        const tag = el.tagName;
+
+        // 标题元素：匹配 # 标题格式
+        if (/^H[1-6]$/.test(tag)) {
+            const level = parseInt(tag[1]);
+            const prefix = '#'.repeat(level) + ' ';
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith(prefix)) {
+                    return i;
+                }
+            }
+        }
+
+        // 代码块元素：匹配 ``` 语法
+        if (tag === 'PRE') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith('```')) {
+                    return i;
+                }
+            }
+        }
+
+        // 引用块：匹配 > 语法
+        if (tag === 'BLOCKQUOTE') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith('>')) {
+                    return i;
+                }
+            }
+        }
+
+        // 列表：匹配 - 或 * 或 1. 语法
+        if (tag === 'UL' || tag === 'OL') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                const line = editorLines[i].trim();
+                if (/^[-*+]\s/.test(line) || /^\d+\.\s/.test(line)) {
+                    return i;
+                }
+            }
+        }
+
+        // 表格：匹配 | 语法
+        if (tag === 'TABLE') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (editorLines[i].trim().startsWith('|')) {
+                    return i;
+                }
+            }
+        }
+
+        // 水平线
+        if (tag === 'HR') {
+            for (let i = startLine; i < editorLines.length; i++) {
+                const line = editorLines[i].trim();
+                if (/^[-*_]{3,}$/.test(line)) {
+                    return i;
+                }
+            }
+        }
+
+        // 包含图片的元素（P、DIV 等）：匹配 ![...](...) 语法
+        if (el.querySelector('img')) {
+            for (let i = startLine; i < editorLines.length; i++) {
+                if (/!\[.*\]\(.*\)/.test(editorLines[i])) {
+                    return i;
+                }
+            }
+        }
+
+        // 段落和其他元素：用文本内容匹配
+        if (elText.length >= 3) {
+            const searchLen = Math.min(15, elText.length);
+            const searchStr = elText.substring(0, searchLen);
+            for (let i = startLine; i < editorLines.length; i++) {
+                const line = editorLines[i].trim();
+                // 去除常见 markdown 标记后再比较
+                const cleanLine = line.replace(/[*_~`\[\]()#>|]/g, '').trim();
+                if (cleanLine.includes(searchStr)) {
+                    return i;
+                }
+            }
+        }
+
+        // 兜底：返回 startLine 作为近似行号
+        return startLine < editorLines.length ? startLine : null;
     }
 
     /* TOC */
@@ -3990,11 +4198,11 @@ erDiagram
     function setEditMode() {
         const editorContainer = document.querySelector(".editor-container");
         editorContainer.style.display = "flex";
-        editorContainer.style.width = "50%";
+        editorContainer.style.width = savedEditorWidth;
         editorContainer.style.minHeight = "0";
         const previewWrapper = document.querySelector(".preview-wrapper");
         previewWrapper.style.display = "flex";
-        previewWrapper.style.width = "50%";
+        previewWrapper.style.width = savedPreviewWidth;
         previewWrapper.style.minHeight = "0";
         const resizerContainer = document.querySelector(".resizer-container");
         resizerContainer.style.display = "flex";
@@ -4098,12 +4306,12 @@ erDiagram
         const editorColorKey = isDarkMode ? "bgColor_dark" : "bgColor_light";
         const savedEditorColor = Storage.get(editorColorKey);
         const editorTextarea = document.getElementById("editor");
-        const lineNumbers = document.getElementById("lineNumbers");
+        const lineNumEl = document.getElementById("lineNumbers");
         const editorBgColorBtn = document.getElementById("tb-bgColor");
 
         if (savedEditorColor !== null) {
             editorTextarea.style.backgroundColor = savedEditorColor;
-            lineNumbers.style.backgroundColor = savedEditorColor;
+            lineNumEl.style.backgroundColor = savedEditorColor;
             editorBgColorBtn.style.backgroundColor = savedEditorColor || "";
         } else {
             // 清除自定义背景色，使用默认样式
@@ -4142,7 +4350,7 @@ erDiagram
             const button = document.createElement("button");
             button.className = "btn btn-control btn-p-sm dropdown-item";
             button.dataset.theme = key;
-            button.innerHTML = theme.name;
+            button.textContent = theme.name;
             button.onclick = function() {
                 selectTheme(key);
             };
@@ -4216,6 +4424,9 @@ erDiagram
         const editorContainer = document.querySelector(".editor-container");
 
         if (isPreviewCollapsed) {
+            // 保存当前比例
+            savedEditorWidth = editorContainer.style.width || "50%";
+            savedPreviewWidth = previewWrapper.style.width || "50%";
             // 折叠预览
             editorContainer.style.width = "100%";
             editorContainer.style.minHeight = "0";
@@ -4224,10 +4435,10 @@ erDiagram
             previewWrapper.style.display = "none";
             resizerMid.title = "展开预览区域";
         } else {
-            // 展开预览
-            editorContainer.style.width = "50%";
+            // 展开预览，恢复之前保存的比例
+            editorContainer.style.width = savedEditorWidth;
             editorContainer.style.minHeight = "0";
-            previewWrapper.style.width = "50%";
+            previewWrapper.style.width = savedPreviewWidth;
             previewWrapper.style.minHeight = "0";
             previewWrapper.style.display = "flex";
             resizerMid.title = "折叠预览区域";
@@ -4484,18 +4695,8 @@ erDiagram
                     const base64 = ev.target.result;
                     const imageText = "\n![](" + base64 + ")\n";
 
-                    // 使用 execCommand 插入文本，这样可以支持撤销
-                    editor.focus();
-                    const success = document.execCommand('insertText', false, imageText);
-
-                    // 如果 execCommand 失败（某些浏览器可能不支持），则使用传统方式
-                    if (!success) {
-                        const start = editor.selectionStart;
-                        const end = editor.selectionEnd;
-                        const value = editor.value;
-                        editor.value = value.substring(0, start) + imageText + value.substring(end);
-                        editor.selectionStart = editor.selectionEnd = start + imageText.length;
-                    }
+                    // 使用辅助函数插入文本，支持撤销
+                    execInsertText(editor, imageText);
 
                     render();
                 };
@@ -4508,18 +4709,23 @@ erDiagram
 
     /* 保存 */
     async function saveFile() {
-        if (currentFileHandle) {
-            const writable = await currentFileHandle.createWritable();
-            await writable.write(editor.value);
-            await writable.close();
-            updateFileName(currentFileHandle.name);
-            showToast('保存成功！');
-        } else if (draggedFileName) {
-            // 拖拽打开的文件，首次保存需要选择位置
-            showToast('请选择保存位置（已自动填入原文件名）', 'success', 3000);
-            await saveAsWithSuggestedName(draggedFileName);
-        } else {
-            await saveAs();
+        try {
+            if (currentFileHandle) {
+                const writable = await currentFileHandle.createWritable();
+                await writable.write(editor.value);
+                await writable.close();
+                updateFileName(currentFileHandle.name);
+                showToast('保存成功！');
+            } else if (draggedFileName) {
+                // 拖拽打开的文件，首次保存需要选择位置
+                showToast('请选择保存位置（已自动填入原文件名）', 'success', 3000);
+                await saveAsWithSuggestedName(draggedFileName);
+            } else {
+                await saveAs();
+            }
+        } catch (e) {
+            console.error('保存失败:', e);
+            showToast('保存失败：' + e.message, 'danger');
         }
     }
 
@@ -4813,13 +5019,17 @@ erDiagram
         const fileName = document.getElementById("currentFileName").textContent || "document";
         const htmlFileName = fileName.replace(/\.md$/, '') + '.html';
 
+        // HTML 转义标题，防止 XSS
+        const rawTitle = editor.value.split('\n')[0].replace(/#/g, '').trim() || 'Document';
+        const safeTitle = rawTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
         const htmlContent = `<!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>${editor.value.split('\n')[0].replace(/#/g, '').trim() || 'Document'}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+    <title>${safeTitle}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.9.0/github-markdown.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.43/dist/katex.min.css">
     <style>
         body {
             margin: 0;
@@ -5007,29 +5217,17 @@ erDiagram
 
     /* 显示 About 模态框 */
     function showAboutModal() {
-        const modal = document.getElementById('aboutModal');
-        modal.classList.add('show');
+        const modalEl = document.getElementById('aboutModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
     }
 
     /* 隐藏 About 模态框 */
     function hideAboutModal() {
-        const modal = document.getElementById('aboutModal');
-        modal.classList.remove('show');
+        const modalEl = document.getElementById('aboutModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
     }
-
-    // 点击模态框外部关闭
-    document.getElementById('aboutModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            hideAboutModal();
-        }
-    });
-
-    // 模态框上监听 ESC 键关闭
-    document.getElementById('aboutModal').addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            hideAboutModal();
-        }
-    });
 
     /* 快捷键监听 */
     document.addEventListener('keydown', function(e) {
