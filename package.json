@@ -1,0 +1,20 @@
+{
+  "name": "markdown-editor",
+  "version": "1.0.0",
+  "description": "Markdown 编辑器 - 实时预览、语法高亮、数学公式、图表渲染",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:offline": "node build-offline.js",
+    "build:electron": "npm run build:offline && electron-builder --win",
+    "build:electron:mac": "npm run build:offline && electron-builder --mac",
+    "build:electron:linux": "npm run build:offline && electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "electron-store": "^6.0.0"
+  }
+}
