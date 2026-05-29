@@ -22,16 +22,16 @@ win:
   target:
     - target: nsis
       arch: [x64]
-
-nsis:
-  oneClick: false
-  perMachine: false
-  allowToChangeInstallationDirectory: true
   fileAssociations:
     - ext: md
       name: Markdown Document
     - ext: markdown
       name: Markdown Document
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
 
 mac:
   icon: electron/icons/icon.icns
