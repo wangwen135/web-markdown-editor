@@ -18,7 +18,7 @@ files:
   - "!**/node_modules/.cache"
 
 win:
-  icon: electron/icons/icon.ico
+  signAndEditExecutable: false
   target:
     - target: nsis
       arch: [x64]
@@ -27,11 +27,12 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  fileAssociations:
-    - ext: md
-      name: Markdown Document
-    - ext: markdown
-      name: Markdown Document
+
+fileAssociations:
+  - ext: md
+    name: Markdown Document
+  - ext: markdown
+    name: Markdown Document
 
 mac:
   icon: electron/icons/icon.icns
