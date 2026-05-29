@@ -12,7 +12,7 @@ files:
   - electron/bridge.js
   - electron/menu.js
   - electron/ipc-handlers.js
-  - electron/node_modules/**/*
+  - node_modules/**/*
   - offline/**/*
   - package.json
   - "!**/node_modules/.cache"

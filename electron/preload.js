@@ -1,5 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+let menuCallback = null;
+ipcRenderer.on('menu-action', (_event, data) => {
+  if (menuCallback) menuCallback(data);
+});
+
 contextBridge.exposeInMainWorld('electronAPI', {
   showOpenDialog: () => ipcRenderer.invoke('file:open-dialog'),
   showSaveDialog: (suggestedName) => ipcRenderer.invoke('file:save-dialog', suggestedName),
@@ -11,9 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('app:get-version'),
 
   onMenuAction: (callback) => {
-    // 移除旧的监听器防止重复注册
-    ipcRenderer.removeAllListeners('menu-action');
-    ipcRenderer.on('menu-action', (_event, data) => callback(data));
+    menuCallback = callback;
   },
 
   platform: process.platform,

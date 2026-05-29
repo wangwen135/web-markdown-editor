@@ -64,7 +64,6 @@ jobs:
       - name: Generate release notes
         id: release_notes
         run: |
-          VERSION="${{ github.ref_name }}"
           cat > release_notes.md << 'NOTES'
           ## 离线版本（浏览器）
 

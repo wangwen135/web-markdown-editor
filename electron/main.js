@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
@@ -66,7 +66,10 @@ function createWindow() {
   rebuildMenu();
 
   // 注入 bridge.js，通过 DOM <script> 标签确保与页面脚本在同一作用域
+  let bridgeInjected = false;
   mainWindow.webContents.on('did-finish-load', () => {
+    if (bridgeInjected) return;
+    bridgeInjected = true;
     const bridgeCode = fs.readFileSync(path.join(__dirname, 'bridge.js'), 'utf-8');
     mainWindow.webContents.executeJavaScript(
       `const _s = document.createElement('script');` +
