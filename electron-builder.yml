@@ -1,0 +1,58 @@
+appId: com.wangwen135.markdown-editor
+productName: Markdown Editor
+copyright: Copyright 2025
+
+directories:
+  output: dist
+  buildResources: electron/icons
+
+files:
+  - electron/main.js
+  - electron/preload.js
+  - electron/bridge.js
+  - electron/menu.js
+  - electron/ipc-handlers.js
+  - electron/node_modules/**/*
+  - offline/**/*
+  - package.json
+  - "!**/node_modules/.cache"
+
+win:
+  icon: electron/icons/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  fileAssociations:
+    - ext: md
+      name: Markdown Document
+    - ext: markdown
+      name: Markdown Document
+
+mac:
+  icon: electron/icons/icon.icns
+  target:
+    - target: dmg
+      arch: [universal]
+  extendInfo:
+    CFBundleDocumentTypes:
+      - name: Markdown Document
+        extensions: [md, markdown]
+        role: Editor
+
+linux:
+  icon: electron/icons/icon.png
+  target:
+    - target: AppImage
+      arch: [x64]
+  category: Office
+  mimeTypes:
+    - text/markdown
+
+publish:
+  provider: github
+  releaseType: release

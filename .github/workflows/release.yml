@@ -9,7 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  # Web 离线版发布
+  release-web:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -64,13 +65,12 @@ jobs:
         id: release_notes
         run: |
           VERSION="${{ github.ref_name }}"
-          cat > release_notes.md << 'EOF'
-          ## 离线版本
+          cat > release_notes.md << 'NOTES'
+          ## 离线版本（浏览器）
 
           - 所有资源本地化，完全离线运行
           - 无需网络连接，双击即用
           - 支持实时预览、语法高亮、数学公式、图表渲染
-          - 新增 DOMPurify XSS 防护
 
           ## 使用方法
 
@@ -78,6 +78,12 @@ jobs:
           2. 解压到任意目录
           3. 用浏览器打开 `markdown-editor-offline.html`
           4. 开始使用！
+
+          ## 桌面版本（Electron）
+
+          - Windows 用户可下载 `.exe` 安装包
+          - 支持 .md 文件关联，双击直接打开
+          - 原生文件对话框和菜单栏
 
           ## 依赖版本
 
@@ -92,7 +98,7 @@ jobs:
           | Bootstrap | 5.3.8 |
           | Bootstrap Icons | 1.13.1 |
           | GitHub Markdown CSS | 5.9.0 |
-          EOF
+          NOTES
 
           echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
@@ -102,5 +108,40 @@ jobs:
           files: web-markdown-editor-offline.zip
           body_path: release_notes.md
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Electron 桌面版构建（Windows）
+  release-electron:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build offline version
+        run: node build-offline.js
+
+      - name: Build Electron app
+        run: npm run build:electron
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
