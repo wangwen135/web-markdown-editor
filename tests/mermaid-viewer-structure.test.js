@@ -32,4 +32,10 @@ expectMatch(/svg\.querySelector\('foreignObject'\)/, 'PNG export routes Mermaid 
 expectMatch(/mermaidExportBackgroundMode/, 'viewer persists the background mode');
 expectMatch(/mermaidExportBackgroundColor/, 'viewer persists the custom background color');
 
+const exportRemovalCount = (html.match(/clonedDoc\.querySelectorAll\('\.no-document-export'\)/g) || []).length;
+assert.ok(exportRemovalCount >= 2, 'PDF and document PNG clones remove viewer controls');
+console.log('PASS PDF and document PNG clones remove viewer controls');
+expectMatch(/function getExportablePreviewHtml\(\)/, 'HTML export uses a sanitized preview clone');
+expectMatch(/\$\{getExportablePreviewHtml\(\)\}/, 'HTML export excludes viewer controls');
+
 console.log('Passed Mermaid viewer structure checks');

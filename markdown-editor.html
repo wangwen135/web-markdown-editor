@@ -6064,6 +6064,7 @@ erDiagram
                     if (loadingOverlay) {
                         loadingOverlay.style.display = 'none';
                     }
+                    clonedDoc.querySelectorAll('.no-document-export').forEach(node => node.remove());
                 }
             },
             jsPDF:        {
@@ -6185,6 +6186,7 @@ erDiagram
                 if (loadingOverlay) {
                     loadingOverlay.style.display = 'none';
                 }
+                clonedDoc.querySelectorAll('.no-document-export').forEach(node => node.remove());
                 // 强制设置克隆元素的宽度，确保与原始宽度一致
                 const clonedPreview = clonedDoc.getElementById('preview');
                 if (clonedPreview) {
@@ -6212,6 +6214,12 @@ erDiagram
             console.error('导出图片失败:', err);
             showToast('导出图片失败', 'error');
         });
+    }
+
+    function getExportablePreviewHtml() {
+        const clone = preview.cloneNode(true);
+        clone.querySelectorAll('.no-document-export').forEach(node => node.remove());
+        return clone.innerHTML;
     }
 
     /* 导出 HTML */
@@ -6247,7 +6255,7 @@ erDiagram
 </head>
 <body>
     <article class="markdown-body">
-        ${preview.innerHTML}
+        ${getExportablePreviewHtml()}
     </article>
 </body>
 </html>`;
