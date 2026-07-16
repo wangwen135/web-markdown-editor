@@ -9,6 +9,11 @@ function expectMatch(pattern, message) {
     console.log(`PASS ${message}`);
 }
 
+function expectNoMatch(pattern, message) {
+    assert.ok(!pattern.test(html), message);
+    console.log(`PASS ${message}`);
+}
+
 expectMatch(/id="mermaidViewer"[^>]*role="dialog"[^>]*aria-modal="true"/, 'viewer has modal dialog semantics');
 expectMatch(/id="mermaidViewerCanvas"/, 'viewer contains a canvas viewport');
 expectMatch(/id="mermaidViewerStage"/, 'viewer contains a transform stage');
@@ -17,6 +22,15 @@ expectMatch(/id="mermaidViewerNext"/, 'viewer contains next navigation');
 expectMatch(/id="mermaidViewerExportPanel"/, 'viewer contains export controls');
 expectMatch(/id="mermaidViewerMinimap"/, 'viewer contains an adaptive minimap');
 expectMatch(/id="mermaidViewerMinimapViewport"/, 'minimap contains a draggable viewport indicator');
+expectNoMatch(/mermaidViewerMinimapClose/, 'minimap has no close button or close-button binding');
+expectNoMatch(/mermaid-viewer-minimap-close/, 'minimap has no close-button styles');
+expectMatch(/id="mermaidViewerCopy"/, 'viewer contains a copy-source button');
+expectMatch(/div\.dataset\.mermaidSource = el\.textContent/, 'Mermaid rendering preserves original source across Mermaid DOM replacement');
+expectMatch(/block\.dataset\.mermaidSource\.trim\(\)/, 'copying reads the preserved source from the current diagram');
+expectMatch(/copySource,\s*getCurrentMermaidSource/, 'current source is exposed for browser verification');
+expectMatch(/async function copySource\(\)/, 'viewer provides asynchronous source copying');
+expectMatch(/navigator\.clipboard\.writeText\(source\)/, 'copying prefers the Clipboard API');
+expectMatch(/document\.execCommand\('copy'\)/, 'copying has a legacy fallback');
 expectMatch(/action\.className = 'mermaid-view-action no-document-export'/, 'diagram action is excluded from document exports');
 expectMatch(/const MermaidViewer = \(\(\) => \{/, 'viewer module is defined');
 expectMatch(/window\.MermaidViewer = MermaidViewer;/, 'viewer module is exposed for verification');

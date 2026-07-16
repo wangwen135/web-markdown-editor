@@ -1845,18 +1845,6 @@
             cursor: move;
         }
 
-        .mermaid-viewer-minimap-close {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            z-index: 2;
-            width: 24px !important;
-            min-width: 24px !important;
-            height: 24px !important;
-            padding: 0 !important;
-            background: var(--viewer-panel) !important;
-        }
-
         .mermaid-viewer-export-panel {
             position: absolute;
             top: 48px;
@@ -2010,6 +1998,9 @@
             </button>
         </div>
         <div class="mermaid-viewer-actions">
+            <button id="mermaidViewerCopy" type="button" title="复制 Mermaid 代码" aria-label="复制 Mermaid 代码">
+                <i class="bi bi-clipboard"></i>
+            </button>
             <button id="mermaidViewerExport" type="button" title="导出图表" aria-label="打开导出设置" aria-expanded="false">
                 <i class="bi bi-download"></i>
             </button>
@@ -2048,10 +2039,6 @@
     <div id="mermaidViewerCanvas" class="mermaid-viewer-canvas" aria-label="可拖动和缩放的图表画布">
         <div id="mermaidViewerStage" class="mermaid-viewer-stage"></div>
         <div id="mermaidViewerMinimap" class="mermaid-viewer-minimap" hidden>
-            <button id="mermaidViewerMinimapClose" class="mermaid-viewer-minimap-close" type="button"
-                    title="隐藏导航图" aria-label="隐藏导航图">
-                <i class="bi bi-x"></i>
-            </button>
             <svg id="mermaidViewerMinimapSvg" aria-label="图表缩略导航">
                 <g id="mermaidViewerMinimapContent"></g>
                 <rect id="mermaidViewerMinimapViewport" class="mermaid-viewer-minimap-viewport"></rect>
@@ -4157,6 +4144,7 @@ erDiagram
             zoomIn: document.getElementById('mermaidViewerZoomIn'),
             fit: document.getElementById('mermaidViewerFit'),
             actual: document.getElementById('mermaidViewerActual'),
+            copy: document.getElementById('mermaidViewerCopy'),
             exportButton: document.getElementById('mermaidViewerExport'),
             exportPanel: document.getElementById('mermaidViewerExportPanel'),
             exportFormat: document.getElementById('mermaidViewerExportFormat'),
@@ -4167,7 +4155,6 @@ erDiagram
             download: document.getElementById('mermaidViewerDownload'),
             close: document.getElementById('mermaidViewerClose'),
             minimap: document.getElementById('mermaidViewerMinimap'),
-            minimapClose: document.getElementById('mermaidViewerMinimapClose'),
             minimapSvg: document.getElementById('mermaidViewerMinimapSvg'),
             minimapContent: document.getElementById('mermaidViewerMinimapContent'),
             minimapViewport: document.getElementById('mermaidViewerMinimapViewport')
@@ -4183,7 +4170,6 @@ erDiagram
             translation: {x: 0, y: 0},
             originalBodyOverflow: '',
             isOpen: false,
-            minimapHidden: false,
             pointers: new Map(),
             lastPointer: null,
             lastPinchCenter: null,
@@ -4212,7 +4198,7 @@ erDiagram
         }
 
         function setupMinimap() {
-            if (!state.sourceSvg || state.minimapHidden) {
+            if (!state.sourceSvg) {
                 elements.minimap.hidden = true;
                 return;
             }
@@ -4366,7 +4352,6 @@ erDiagram
             state.trigger = trigger || document.activeElement;
             state.originalBodyOverflow = document.body.style.overflow;
             state.isOpen = true;
-            state.minimapHidden = false;
             elements.root.classList.add('is-open');
             elements.root.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
@@ -4618,6 +4603,61 @@ erDiagram
             }
         }
 
+        function getCurrentMermaidSource() {
+            const block = state.sourceSvg && state.sourceSvg.closest('.mermaid');
+            return block && block.dataset.mermaidSource
+                ? block.dataset.mermaidSource.trim()
+                : '';
+        }
+
+        function fallbackCopyText(source) {
+            const textarea = document.createElement('textarea');
+            textarea.value = source;
+            textarea.readOnly = true;
+            textarea.className = 'no-document-export';
+            Object.assign(textarea.style, {
+                position: 'fixed',
+                left: '-100000px',
+                top: '0',
+                opacity: '0'
+            });
+            document.body.appendChild(textarea);
+            try {
+                textarea.select();
+                textarea.setSelectionRange(0, textarea.value.length);
+                return document.execCommand('copy');
+            } finally {
+                textarea.remove();
+            }
+        }
+
+        async function copySource() {
+            const source = getCurrentMermaidSource();
+            if (!source) {
+                showToast('找不到当前图表的 Mermaid 源码', 'error');
+                return;
+            }
+
+            let copied = false;
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                try {
+                    await navigator.clipboard.writeText(source);
+                    copied = true;
+                } catch (error) {
+                    console.warn('Clipboard API 复制失败，尝试兼容方式:', error);
+                }
+            }
+            if (!copied) {
+                try {
+                    copied = fallbackCopyText(source);
+                } catch (error) {
+                    console.warn('兼容方式复制 Mermaid 代码失败:', error);
+                }
+            }
+
+            showToast(copied ? 'Mermaid 代码已复制' : '复制失败，请手动复制', copied ? 'success' : 'error');
+        }
+
         function enhance() {
             const mermaidBlocks = Array.from(preview.querySelectorAll('.mermaid'));
             mermaidBlocks.forEach(block => {
@@ -4790,11 +4830,6 @@ erDiagram
         elements.canvas.addEventListener('pointermove', handlePointerMove);
         elements.canvas.addEventListener('pointerup', handlePointerEnd);
         elements.canvas.addEventListener('pointercancel', handlePointerEnd);
-        elements.minimapClose.addEventListener('click', event => {
-            event.stopPropagation();
-            state.minimapHidden = true;
-            elements.minimap.hidden = true;
-        });
         elements.minimapSvg.addEventListener('pointerdown', event => {
             event.preventDefault();
             event.stopPropagation();
@@ -4857,6 +4892,7 @@ erDiagram
             if (elements.exportFormat.value === 'svg') exportSvg();
             else exportPng();
         });
+        elements.copy.addEventListener('click', copySource);
         elements.exportButton.addEventListener('click', () => {
             const isOpen = elements.exportPanel.classList.toggle('is-open');
             elements.exportButton.setAttribute('aria-expanded', String(isOpen));
@@ -4880,7 +4916,9 @@ erDiagram
             resetToActualSize,
             buildExportSvg,
             exportSvg,
-            exportPng
+            exportPng,
+            copySource,
+            getCurrentMermaidSource
         };
     })();
     window.MermaidViewer = MermaidViewer;
@@ -5161,6 +5199,7 @@ erDiagram
             const parent = el.parentElement;
             const div = document.createElement("div");
             div.className = "mermaid";
+            div.dataset.mermaidSource = el.textContent;
             div.innerHTML = el.textContent;
             parent.replaceWith(div);
         });
