@@ -25,12 +25,14 @@ expectMatch(/await mermaid\.run\(\{nodes: mermaidElements\}\)/, 'enhancement wai
 expectMatch(/elements\.canvas\.addEventListener\('wheel',[\s\S]*?passive: false/, 'canvas captures wheel zoom without page scrolling');
 expectMatch(/elements\.canvas\.addEventListener\('pointerdown'/, 'canvas starts pointer panning and pinch gestures');
 expectMatch(/elements\.canvas\.setPointerCapture\(event\.pointerId\)/, 'canvas captures active pointers');
+expectMatch(/state\.pointerDownTarget === elements\.canvas && !state\.pointerMoved/, 'clicking empty canvas backdrop closes without breaking drag');
 expectMatch(/function buildExportSvg\(background\)/, 'viewer builds an independent SVG export');
 expectMatch(/function exportSvg\(\)/, 'viewer exports SVG files');
 expectMatch(/async function exportPng\(\)/, 'viewer exports PNG files asynchronously');
 expectMatch(/svg\.querySelector\('foreignObject'\)/, 'PNG export routes Mermaid HTML labels through the safe fallback');
 expectMatch(/mermaidExportBackgroundMode/, 'viewer persists the background mode');
 expectMatch(/mermaidExportBackgroundColor/, 'viewer persists the custom background color');
+expectMatch(/backgroundColorText\.addEventListener\('input'/, 'typed custom colors persist without waiting for change');
 
 const exportRemovalCount = (html.match(/clonedDoc\.querySelectorAll\('\.no-document-export'\)/g) || []).length;
 assert.ok(exportRemovalCount >= 2, 'PDF and document PNG clones remove viewer controls');

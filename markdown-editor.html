@@ -4189,7 +4189,10 @@ erDiagram
             lastPinchCenter: null,
             lastPinchDistance: 0,
             minimapPointerId: null,
-            exporting: false
+            exporting: false,
+            pointerDownTarget: null,
+            pointerStart: null,
+            pointerMoved: false
         };
 
         function refreshDiagrams() {
@@ -4663,7 +4666,11 @@ erDiagram
             elements.canvas.classList.add('is-dragging');
             if (state.pointers.size === 1) {
                 state.lastPointer = {x: event.clientX, y: event.clientY};
+                state.pointerDownTarget = event.target;
+                state.pointerStart = {x: event.clientX, y: event.clientY};
+                state.pointerMoved = false;
             } else if (state.pointers.size >= 2) {
+                state.pointerMoved = true;
                 const points = Array.from(state.pointers.values()).slice(0, 2);
                 state.lastPinchCenter = pointerCenter(points);
                 state.lastPinchDistance = pointerDistance(points);
@@ -4674,6 +4681,12 @@ erDiagram
             if (!state.pointers.has(event.pointerId)) return;
             event.preventDefault();
             state.pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
+            if (state.pointerStart && Math.hypot(
+                event.clientX - state.pointerStart.x,
+                event.clientY - state.pointerStart.y
+            ) > 4) {
+                state.pointerMoved = true;
+            }
 
             if (state.pointers.size === 1 && state.lastPointer) {
                 const current = state.pointers.get(event.pointerId);
@@ -4700,6 +4713,8 @@ erDiagram
 
         function handlePointerEnd(event) {
             if (!state.pointers.has(event.pointerId)) return;
+            const shouldCloseFromBackdrop = state.pointers.size === 1 &&
+                state.pointerDownTarget === elements.canvas && !state.pointerMoved;
             state.pointers.delete(event.pointerId);
             if (elements.canvas.hasPointerCapture(event.pointerId)) {
                 elements.canvas.releasePointerCapture(event.pointerId);
@@ -4713,7 +4728,11 @@ erDiagram
                 state.lastPinchCenter = null;
                 state.lastPinchDistance = 0;
                 elements.canvas.classList.remove('is-dragging');
+                state.pointerDownTarget = null;
+                state.pointerStart = null;
+                state.pointerMoved = false;
             }
+            if (shouldCloseFromBackdrop) close();
         }
 
         function handleWheel(event) {
@@ -4816,6 +4835,13 @@ erDiagram
         elements.backgroundColor.addEventListener('input', () => {
             elements.backgroundColorText.value = elements.backgroundColor.value;
             Storage.set('mermaidExportBackgroundColor', elements.backgroundColor.value);
+        });
+        elements.backgroundColorText.addEventListener('input', () => {
+            const color = elements.backgroundColorText.value.trim();
+            if (/^#[0-9a-f]{6}$/i.test(color)) {
+                elements.backgroundColor.value = color;
+                Storage.set('mermaidExportBackgroundColor', color);
+            }
         });
         elements.backgroundColorText.addEventListener('change', () => {
             const color = elements.backgroundColorText.value.trim();

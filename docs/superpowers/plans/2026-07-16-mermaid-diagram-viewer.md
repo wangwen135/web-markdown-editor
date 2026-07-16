@@ -4,7 +4,7 @@
 
 **Goal:** 为每个已渲染的 Mermaid 图表提供可缩放、平移、多图切换、minimap，以及完整 PNG/SVG 导出的全屏查看器。
 
-**Architecture:** 保持 `markdown-editor.html` 为唯一在线源文件，在其中增加 `MermaidViewerMath` 纯函数集合和 `MermaidViewer` 单例模块。查看器克隆预览区原始 SVG 进行显示，所有视图变换只作用于克隆；导出重新克隆原始 SVG，确保不受当前缩放和平移影响。离线版继续由 `build-offline.js` 自动生成，Electron 无需新增 IPC。
+**Architecture:** 保持 `markdown-editor.html` 为唯一在线源文件，在其中增加 `MermaidViewerMath` 纯函数集合和 `MermaidViewer` 单例模块。查看器克隆预览区原始 SVG 进行显示，所有视图变换只作用于克隆；导出重新克隆原始 SVG，确保不受当前缩放和平移影响。离线 Web 版继续由 `build-offline.js` 自动生成，本次不修改或验收 Electron。
 
 **Tech Stack:** 原生 JavaScript、SVG、Pointer Events、Canvas 2D、Bootstrap Icons、Node.js 内置 `assert`、现有 html2canvas、现有 Storage。
 
@@ -16,7 +16,7 @@
 - minimap 在 100% 图表尺寸任一方向超过画布对应尺寸 1.5 倍时显示。
 - PNG 默认 2 倍导出，最长边不超过 16384px，总像素不超过 64,000,000px。
 - PNG 与 SVG 都支持透明、白色和自定义颜色背景。
-- 在线、离线和 Electron 三端行为一致。
+- 在线和离线 Web 版行为一致；不得修改 `electron/` 目录。
 - 查看器不得修改 Markdown 内容、预览区原始 SVG或现有文档导出结果。
 
 ## File Structure
@@ -319,7 +319,7 @@ git add markdown-editor.html tests/mermaid-viewer-math.test.js
 git commit -m "feat: export Mermaid diagrams as PNG and SVG"
 ```
 
-### Task 5: 集成、文档与三端回归
+### Task 5: 集成、文档与 Web 回归
 
 **Files:**
 - Modify: `markdown-editor.html`
@@ -328,7 +328,7 @@ git commit -m "feat: export Mermaid diagrams as PNG and SVG"
 
 **Interfaces:**
 - Consumes: 完整 `MermaidViewer`
-- Produces: 在线、离线、Electron 可交付功能
+- Produces: 在线和离线 Web 可交付功能
 
 - [ ] **Step 1: 隔离整篇文档导出与打印**
 
@@ -352,9 +352,9 @@ Expected: exit 0，生成的 `offline/markdown-editor-offline.html` 包含 `Merm
 
 验证默认示例和一份超宽/超高/多图测试文档；覆盖打开、缩放、拖动、minimap、切图、关闭、三种背景与两种格式；再验证 Markdown 输入、KaTeX、代码高亮、TOC、滚动同步、整篇 PNG/HTML 导出。
 
-- [ ] **Step 5: 离线与 Electron 冒烟验证**
+- [ ] **Step 5: 离线 Web 冒烟验证**
 
-断网打开离线 HTML，确认查看与导出不请求网络。执行 `npm start`，确认 Electron 中查看器和文件下载正常，主窗口菜单与 Markdown 文件操作不受影响。
+断网打开离线 HTML，确认查看、缩放、平移和导出不依赖新增网络资源。确认 `electron/` 目录相对 `main` 没有差异。
 
 - [ ] **Step 6: 检查差异与提交集成结果**
 
@@ -381,7 +381,7 @@ git commit -m "docs: document Mermaid diagram viewer"
 
 - [ ] **Step 1: 对照设计规格逐条检查 13 项验收约束**
 
-检查入口、缩放平移、适应窗口、minimap、多图、PNG/SVG 背景、完整导出、超大图保护、三类输入、三端兼容和现有功能回归；任何缺口在声明完成前修复。
+检查入口、缩放平移、适应窗口、minimap、多图、PNG/SVG 背景、完整导出、超大图保护、三类输入、在线/离线 Web 兼容和现有功能回归；任何缺口在声明完成前修复。
 
 - [ ] **Step 2: 运行最终验证命令**
 
