@@ -2364,6 +2364,54 @@ sequenceDiagram
         }
     };
 
+    /* MERMAID_VIEWER_MATH_START */
+    const MermaidViewerMath = (() => {
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+        function calculateFitScale(svgWidth, svgHeight, viewportWidth, viewportHeight,
+                                   padding = 40, minScale = 0.1, maxScale = 5) {
+            if (svgWidth <= 0 || svgHeight <= 0 || viewportWidth <= 0 || viewportHeight <= 0) {
+                return 1;
+            }
+            const availableWidth = Math.max(1, viewportWidth - padding * 2);
+            const availableHeight = Math.max(1, viewportHeight - padding * 2);
+            return clamp(Math.min(availableWidth / svgWidth, availableHeight / svgHeight), minScale, maxScale);
+        }
+
+        function calculateAnchoredTranslation(anchor, translation, oldScale, newScale) {
+            const ratio = newScale / oldScale;
+            return {
+                x: anchor.x - (anchor.x - translation.x) * ratio,
+                y: anchor.y - (anchor.y - translation.y) * ratio
+            };
+        }
+
+        function shouldShowMinimap(svgWidth, svgHeight, viewportWidth, viewportHeight, threshold = 1.5) {
+            return svgWidth > viewportWidth * threshold || svgHeight > viewportHeight * threshold;
+        }
+
+        function calculateRasterSize(width, height, multiplier = 2,
+                                     maxEdge = 16384, maxPixels = 64000000) {
+            const requestedScale = multiplier;
+            const edgeScale = Math.min(1, maxEdge / (Math.max(width, height) * requestedScale));
+            const pixelScale = Math.min(1, Math.sqrt(maxPixels / (width * height * requestedScale * requestedScale)));
+            const scale = requestedScale * Math.min(edgeScale, pixelScale);
+            const outputWidth = Math.max(1, Math.floor(width * scale));
+            const outputHeight = Math.max(1, Math.floor(height * scale));
+            return {width: outputWidth, height: outputHeight, scale, reduced: scale < requestedScale};
+        }
+
+        return {
+            clamp,
+            calculateFitScale,
+            calculateAnchoredTranslation,
+            shouldShowMinimap,
+            calculateRasterSize
+        };
+    })();
+    window.MermaidViewerMath = MermaidViewerMath;
+    /* MERMAID_VIEWER_MATH_END */
+
     const editor = document.getElementById("editor");
     const preview = document.getElementById("preview");
     const previewContentWrapper = document.querySelector(".preview-content-wrapper");
