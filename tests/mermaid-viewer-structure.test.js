@@ -14,6 +14,14 @@ function expectNoMatch(pattern, message) {
     console.log(`PASS ${message}`);
 }
 
+function getZIndex(selectorPattern) {
+    const block = html.match(new RegExp(`${selectorPattern}\\s*\\{([\\s\\S]*?)\\}`));
+    assert.ok(block, `missing CSS block for ${selectorPattern}`);
+    const value = block[1].match(/z-index:\s*(\d+)/);
+    assert.ok(value, `missing z-index for ${selectorPattern}`);
+    return Number(value[1]);
+}
+
 expectMatch(/id="mermaidViewer"[^>]*role="dialog"[^>]*aria-modal="true"/, 'viewer has modal dialog semantics');
 expectMatch(/id="mermaidViewerCanvas"/, 'viewer contains a canvas viewport');
 expectMatch(/id="mermaidViewerStage"/, 'viewer contains a transform stage');
@@ -31,6 +39,8 @@ expectMatch(/copySource,\s*getCurrentMermaidSource/, 'current source is exposed 
 expectMatch(/async function copySource\(\)/, 'viewer provides asynchronous source copying');
 expectMatch(/navigator\.clipboard\.writeText\(source\)/, 'copying prefers the Clipboard API');
 expectMatch(/document\.execCommand\('copy'\)/, 'copying has a legacy fallback');
+assert.ok(getZIndex('\\.toast') > getZIndex('\\.mermaid-viewer'), 'toast appears above the full-screen Mermaid viewer');
+console.log('PASS toast appears above the full-screen Mermaid viewer');
 expectMatch(/action\.className = 'mermaid-view-action no-document-export'/, 'diagram action is excluded from document exports');
 expectMatch(/const MermaidViewer = \(\(\) => \{/, 'viewer module is defined');
 expectMatch(/window\.MermaidViewer = MermaidViewer;/, 'viewer module is exposed for verification');
