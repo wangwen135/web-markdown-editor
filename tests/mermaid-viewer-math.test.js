@@ -100,4 +100,12 @@ test('raster size applies multiplier without exceeding safety caps', () => {
     assert.equal(capped.reduced, true);
 });
 
+test('raster size returns a finite safe fallback for empty diagrams', () => {
+    const empty = math.calculateRasterSize(0, 0, 2, 16384, 64000000);
+    assert.equal(empty.width, 1);
+    assert.equal(empty.height, 1);
+    assert.equal(empty.scale, 1);
+    assert.equal(empty.reduced, false);
+});
+
 console.log(`Passed ${passed} Mermaid viewer math tests`);
