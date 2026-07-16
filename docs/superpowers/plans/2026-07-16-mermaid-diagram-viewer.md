@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 为每个已渲染的 Mermaid 图表提供可缩放、平移、多图切换、minimap，以及完整 PNG/SVG 导出的全屏查看器。
+**Goal:** 为每个已渲染的 Mermaid 图表提供可缩放、平移、多图切换、minimap、源码复制，以及完整 PNG/SVG 导出的全屏查看器。
 
 **Architecture:** 保持 `markdown-editor.html` 为唯一在线源文件，在其中增加 `MermaidViewerMath` 纯函数集合和 `MermaidViewer` 单例模块。查看器克隆预览区原始 SVG 进行显示，所有视图变换只作用于克隆；导出重新克隆原始 SVG，确保不受当前缩放和平移影响。离线 Web 版继续由 `build-offline.js` 自动生成，本次不修改或验收 Electron。
 
@@ -14,6 +14,8 @@
 - 在线源文件只修改 `markdown-editor.html`；不得手工编辑 `offline/markdown-editor-offline.html`。
 - 缩放范围固定为 10% 至 500%。
 - minimap 在 100% 图表尺寸任一方向超过画布对应尺寸 1.5 倍时显示。
+- minimap 不提供关闭按钮，达到显示阈值时始终保留。
+- 复制按钮复制纯 Mermaid 源码，不包含 Markdown 三反引号代码围栏。
 - PNG 默认 2 倍导出，最长边不超过 16384px，总像素不超过 64,000,000px。
 - PNG 与 SVG 都支持透明、白色和自定义颜色背景。
 - 在线和离线 Web 版行为一致；不得修改 `electron/` 目录。
@@ -399,3 +401,54 @@ Expected: tests 0 failures；离线构建 exit 0；diff check 无输出；状态
 Run: `git log --oneline main..HEAD`
 
 Expected: 包含设计文档、数学测试、查看器外壳、交互、导出和集成文档等聚焦提交。
+
+### Task 7: 移除 Minimap 关闭入口并复制 Mermaid 源码
+
+**Files:**
+- Modify: `markdown-editor.html`
+- Modify: `tests/mermaid-viewer-structure.test.js`
+- Generate: `offline/markdown-editor-offline.html`
+
+**Interfaces:**
+- Produces: `MermaidViewer.copySource(): Promise<void>`
+- Produces: `.mermaid` 元素的 `__mermaidSource: string`
+
+- [ ] **Step 1: 写入失败的结构测试**
+
+断言 HTML 不包含 `mermaidViewerMinimapClose` 或 `.mermaid-viewer-minimap-close`，包含 `#mermaidViewerCopy`，渲染阶段保存 `div.__mermaidSource = el.textContent`，模块包含 `async function copySource()`、`navigator.clipboard.writeText(source)` 和 `document.execCommand('copy')`。
+
+- [ ] **Step 2: 运行测试并确认失败原因**
+
+Run: `node tests/mermaid-viewer-structure.test.js`
+
+Expected: FAIL，首先报告 minimap 关闭入口仍然存在。
+
+- [ ] **Step 3: 删除 Minimap 关闭入口**
+
+从 CSS、HTML、elements 映射和事件绑定中删除 minimap 关闭按钮；删除 `minimapHidden` 状态与相关分支。`setupMinimap()` 只使用 `shouldShowMinimap()` 决定 `hidden`。
+
+- [ ] **Step 4: 保存源码并增加复制按钮**
+
+`renderMermaid()` 在替换代码块前执行 `div.__mermaidSource = el.textContent`。查看器顶部在导出按钮左侧增加 `#mermaidViewerCopy`，使用 clipboard 图标，标题与可访问名称为“复制 Mermaid 代码”。
+
+- [ ] **Step 5: 实现主路径与回退复制**
+
+`copySource()` 从当前 `state.sourceSvg.closest('.mermaid').__mermaidSource` 读取源码并去除首尾空白。优先 `await navigator.clipboard.writeText(source)`；失败或 API 不存在时创建只读 textarea、选中并调用 `document.execCommand('copy')`，在 `finally` 中移除 textarea。成功 Toast 为“Mermaid 代码已复制”，两条路径都失败时为“复制失败，请手动复制”。
+
+- [ ] **Step 6: 验证并生成离线 Web 版**
+
+Run: `node tests/mermaid-viewer-structure.test.js`
+
+Expected: 全部 PASS。
+
+Run: `node tests/mermaid-viewer-math.test.js`
+
+Expected: 9 项全部 PASS。
+
+Run: `npm run build:offline`
+
+Expected: exit 0，在线和离线 HTML 都不包含 minimap 关闭入口并包含复制按钮。
+
+- [ ] **Step 7: 浏览器验收**
+
+打开含两张 Mermaid 图的文档：复制第一张得到纯 Mermaid 源码；切到第二张后复制内容同步变化；复制结果不含代码围栏；大图 minimap 没有叉且继续按 1.5 倍阈值显示。
