@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addRecentFile: (filePath) => ipcRenderer.invoke('file:add-recent', filePath),
   clearRecentFiles: () => ipcRenderer.invoke('file:clear-recent'),
   getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+  notifyRendererReady: () => ipcRenderer.send('renderer:ready'),
 
   onMenuAction: (callback) => {
     // 移除旧的监听器防止重复注册

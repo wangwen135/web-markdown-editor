@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
@@ -15,7 +15,8 @@ const store = new Store({
 });
 
 let mainWindow = null;
-let pendingFilePath = null;
+let pendingFilePaths = [];
+let rendererReady = false;
 let saveStateTimer = null;
 
 // IPC handlers 只注册一次
@@ -23,6 +24,7 @@ registerIpcHandlers(store, () => mainWindow);
 
 function createWindow() {
   const bounds = store.get('windowBounds');
+  rendererReady = false;
 
   mainWindow = new BrowserWindow({
     width: bounds.width,
@@ -43,9 +45,6 @@ function createWindow() {
     mainWindow.maximize();
   }
 
-  const offlineHtml = path.join(__dirname, '..', 'offline', 'markdown-editor-offline.html');
-  mainWindow.loadFile(offlineHtml);
-
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
@@ -65,6 +64,10 @@ function createWindow() {
   // 构建菜单
   rebuildMenu();
 
+  mainWindow.webContents.on('did-start-loading', () => {
+    rendererReady = false;
+  });
+
   // 注入 bridge.js，通过 DOM <script> 标签确保与页面脚本在同一作用域
   mainWindow.webContents.on('did-finish-load', () => {
     const bridgeCode = fs.readFileSync(path.join(__dirname, 'bridge.js'), 'utf-8');
@@ -72,28 +75,42 @@ function createWindow() {
       `const _s = document.createElement('script');` +
       `_s.textContent = ${JSON.stringify(bridgeCode)};` +
       `document.body.appendChild(_s);`
-    ).then(() => {
-      if (pendingFilePath) {
-        sendFileToRenderer(pendingFilePath);
-        pendingFilePath = null;
-      }
+    ).catch((err) => {
+      console.error('Failed to inject Electron bridge:', err);
     });
   });
+
+  const offlineHtml = path.join(__dirname, '..', 'offline', 'markdown-editor-offline.html');
+  mainWindow.loadFile(offlineHtml);
 }
 
-function sendFileToRenderer(filePath) {
-  if (!mainWindow || mainWindow.isDestroyed()) return;
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const name = path.basename(filePath);
+function queueFileToOpen(filePath) {
+  if (!filePath) return;
+
+  pendingFilePaths = pendingFilePaths.filter(pendingPath => pendingPath !== filePath);
+  pendingFilePaths.push(filePath);
+  flushPendingFiles();
+}
+
+function flushPendingFiles() {
+  if (!rendererReady || !mainWindow || mainWindow.isDestroyed()) return;
+
+  const filePaths = pendingFilePaths;
+  pendingFilePaths = [];
+
+  for (const filePath of filePaths) {
     mainWindow.webContents.send('menu-action', {
       action: 'file:open-from-os',
-      data: { filePath, content, name }
+      data: { filePath }
     });
-  } catch (err) {
-    console.error('Failed to open file:', err);
   }
 }
+
+ipcMain.on('renderer:ready', (event) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) return;
+  rendererReady = true;
+  flushPendingFiles();
+});
 
 function saveWindowState() {
   if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMaximized()) return;
@@ -128,11 +145,8 @@ function getFileFromArgv(argv) {
 
 // macOS 文件关联
 app.on('open-file', (_event, filePath) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    sendFileToRenderer(filePath);
-  } else {
-    pendingFilePath = filePath;
-  }
+  _event.preventDefault();
+  queueFileToOpen(filePath);
 });
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -140,17 +154,18 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', (_event, argv) => {
-    if (mainWindow) {
+    const filePath = getFileFromArgv(argv);
+    if (filePath) queueFileToOpen(filePath);
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
-      const filePath = getFileFromArgv(argv);
-      if (filePath) sendFileToRenderer(filePath);
     }
   });
 
   app.whenReady().then(() => {
     const filePath = getFileFromArgv(process.argv);
-    if (filePath) pendingFilePath = filePath;
+    if (filePath) queueFileToOpen(filePath);
     createWindow();
   });
 }

@@ -141,4 +141,7 @@
         break;
     }
   });
+
+  // 监听器注册完成后再通知主进程，避免双击关联文件时打开事件丢失
+  window.electronAPI.notifyRendererReady();
 })();
