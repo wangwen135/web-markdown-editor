@@ -56,6 +56,36 @@ test('minimap threshold uses either overflowing dimension', () => {
     assert.equal(math.shouldShowMinimap(800, 901, 1000, 600, 1.5), true);
 });
 
+test('viewport rectangle maps canvas coordinates into diagram coordinates', () => {
+    const rect = math.calculateViewportRect(
+        1000,
+        800,
+        800,
+        600,
+        2,
+        {x: -100, y: -50}
+    );
+    assert.equal(rect.x, 50);
+    assert.equal(rect.y, 25);
+    assert.equal(rect.width, 400);
+    assert.equal(rect.height, 300);
+});
+
+test('viewport rectangle is clipped to diagram bounds', () => {
+    const rect = math.calculateViewportRect(
+        300,
+        200,
+        800,
+        600,
+        1,
+        {x: 100, y: 50}
+    );
+    assert.equal(rect.x, 0);
+    assert.equal(rect.y, 0);
+    assert.equal(rect.width, 300);
+    assert.equal(rect.height, 200);
+});
+
 test('raster size applies multiplier without exceeding safety caps', () => {
     const regular = math.calculateRasterSize(1000, 500, 2, 16384, 64000000);
     assert.equal(regular.width, 2000);
