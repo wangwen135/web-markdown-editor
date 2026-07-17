@@ -101,6 +101,5 @@ jobs:
         with:
           files: web-markdown-editor-offline.zip
           body_path: release_notes.md
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
