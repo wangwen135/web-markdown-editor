@@ -36,7 +36,7 @@
 
 **使用预打包版本**：
 
-1. **[📥 下载 web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.1.0/web-markdown-editor-offline.zip)**
+1. **[📥 下载 web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.0/web-markdown-editor-offline.zip)**
 2. 解压到任意目录
 3. 用浏览器打开 `markdown-editor-offline.html`
 4. 开始使用，无需任何网络连接！
