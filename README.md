@@ -8,8 +8,7 @@
 - ✅ 实时 Markdown 预览
 - ✅ 代码语法高亮（支持多种编程语言）
 - ✅ 数学公式渲染（KaTeX）
-- ✅ 图表绘制（Mermaid）
-- ✅ Mermaid 大图查看（缩放、平移、minimap、多图切换、PNG/SVG 单图导出）
+- ✅ Mermaid 图表绘制，支持独立查看、缩放、平移及 PNG/SVG 下载
 - ✅ 导出为 PDF、图片（PNG）、HTML
 - ✅ 多主题支持（亮色/暗色模式）
 - ✅ 目录导航和同步滚动
