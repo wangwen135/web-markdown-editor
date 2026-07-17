@@ -41,6 +41,10 @@
 3. 用浏览器打开 `markdown-editor-offline.html`
 4. 开始使用，无需任何网络连接！
 
+### 桌面版本
+
+Electron 桌面应用已独立到 [web-markdown-editor-desktop](https://github.com/wangwen135/web-markdown-editor-desktop)，本仓库继续专注于简洁的 Web 与离线 HTML 版本。
+
 ## 📦 版本说明
 
 | 版本 | 文件 | 说明 |
@@ -87,4 +91,3 @@ node build-offline.js
 ## 📄 许可证
 
 MIT License
-

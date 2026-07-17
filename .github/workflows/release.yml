@@ -79,12 +79,6 @@ jobs:
           3. 用浏览器打开 `markdown-editor-offline.html`
           4. 开始使用！
 
-          ## 桌面版本（Electron）
-
-          - Windows 用户可下载 `.exe` 安装包
-          - 支持 .md 文件关联，双击直接打开
-          - 原生文件对话框和菜单栏
-
           ## 依赖版本
 
           | 库名 | 版本 |
@@ -108,40 +102,5 @@ jobs:
           files: web-markdown-editor-offline.zip
           body_path: release_notes.md
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Electron 桌面版构建（Windows）
-  release-electron:
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            platform: win
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build offline version
-        run: node build-offline.js
-
-      - name: Build Electron app
-        run: npm run build:electron
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
