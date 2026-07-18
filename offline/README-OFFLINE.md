@@ -1,83 +1,60 @@
-# Web Markdown Editor - 离线版
+# Web Markdown Editor - Offline Edition
 
-一个基于 Web 的 Markdown 编辑器，支持实时预览、语法高亮、数学公式和图表渲染。
-这是一个离线版本，相关资源全部本地化，无需互联网连接即可使用。
+English | [简体中文](README-OFFLINE.zh-CN.md)
 
-## 📋 功能特性
+The offline edition bundles all required resources locally and works without an internet connection.
 
-- ✅ 实时 Markdown 预览
-- ✅ 语法高亮（支持多种编程语言）
-- ✅ 数学公式渲染（KaTeX）
-- ✅ 图表绘制（Mermaid）
-- ✅ 导出为 PDF
-- ✅ 导出为图片（PNG）
-- ✅ 导出为 HTML
-- ✅ 多主题支持（亮色/暗色模式）
-- ✅ 目录导航
-- ✅ 完全离线运行
+## 📋 Features
 
-## 🚀 快速开始
+- Live Markdown preview and syntax highlighting
+- KaTeX math and Mermaid diagrams
+- PDF, PNG, and HTML export
+- English and Simplified Chinese interface
+- Multiple themes, table of contents, and synchronized scrolling
+- Fully local operation
 
-### 使用方法
+## 🚀 Usage
 
-1. 用浏览器打开 `markdown-editor-offline.html`
-2. 开始使用！
+1. Keep `markdown-editor-offline.html` and the `assets/` directory together.
+2. Open `markdown-editor-offline.html` in a modern browser.
+3. Start editing.
 
-## 📁 目录结构
-
-```
+```text
 offline/
-├── markdown-editor-offline.html    # 离线版编辑器（主文件）
-└── assets/                         # 静态资源（必需）
-    ├── css/                        # 样式文件
-    └── js/                         # JavaScript库
+├── markdown-editor-offline.html
+└── assets/
+    ├── css/
+    └── js/
 ```
 
-**注意**: `assets/` 文件夹必须与 `markdown-editor-offline.html` 在同一目录下，否则无法正常使用。
+## 🔒 Privacy
 
-## 🔒 隐私说明
+- Runs locally and does not upload documents
+- Requires no registration or network connection
+- Stores documents and preferences locally
 
-- ✅ 完全本地运行，不上传任何数据
-- ✅ 无需网络连接
-- ✅ 无需用户注册
-- ✅ 文件保存在本地，不会被收集
+## 🌐 Browser support
 
-## 🌐 浏览器兼容性
+Recommended versions:
 
-推荐使用现代浏览器：
-- ✅ Chrome 90+
-- ✅ Edge 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
+- Chrome 90+
+- Edge 90+
+- Firefox 88+
+- Safari 14+
 
+The File System Access API is required for direct local-file saving. Browser permission may be required for some export operations.
 
-## ⚠️ 注意事项
+## 📦 Bundled libraries
 
-1. **文件位置**: 确保整个 `offline/` 文件夹保持完整
-2. **文件保存**: 需要浏览器支持 File System Access API
-3. **导出功能**: 部分导出功能可能需要浏览器权限
-
-## 🛠️ 故障排除
-
-### 导出功能异常
-
-- 确认浏览器支持相关 API
-- 检查浏览器安全策略限制
-- 尝试更换浏览器
-
-## 📦 依赖版本
-
-| 库名 | 版本 | 用途 |
-|------|------|------|
-| Marked.js | 12.0.0 | Markdown 解析 |
-| Highlight.js | 11.9.0 / 11.11.1 (主题) | 代码语法高亮 |
-| KaTeX | 0.16.43 | 数学公式渲染 |
-| Mermaid | 11.13.0 | 图表绘制 |
-| html2pdf.js | 0.14.0 | PDF 导出 |
-| DOMPurify | 3.2.6 | XSS 防护 |
-| html2canvas | 1.4.1 | 图片导出 |
-| Bootstrap | 5.3.8 | UI 框架 |
-| Bootstrap Icons | 1.13.1 | 图标字体 |
-| GitHub Markdown CSS | 5.9.0 | Markdown 样式 |
-
-
+| Library | Version | Purpose |
+| --- | --- | --- |
+| Marked.js | 12.0.0 | Markdown parsing |
+| Highlight.js | 11.9.0 / 11.11.1 (themes) | Syntax highlighting |
+| KaTeX | 0.16.43 | Math rendering |
+| Mermaid | 11.13.0 | Diagrams |
+| html2pdf.js | 0.14.0 | PDF export |
+| DOMPurify | 3.2.6 | XSS protection |
+| html2canvas | 1.4.1 | Image export |
+| Bootstrap | 5.3.8 | UI framework |
+| Bootstrap Icons | 1.13.1 | Icons |
+| GitHub Markdown CSS | 5.9.0 | Markdown styles |

@@ -4,6 +4,7 @@
   "description": "Markdown 编辑器 - 实时预览、语法高亮、数学公式、图表渲染",
   "private": true,
   "scripts": {
-    "build:offline": "node build-offline.js"
+    "build:offline": "node build-offline.js",
+    "test": "node tests/app-metadata.test.js && node tests/i18n.test.js && node tests/mermaid-viewer-math.test.js && node tests/mermaid-viewer-structure.test.js"
   }
 }
