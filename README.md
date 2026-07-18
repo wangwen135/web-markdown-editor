@@ -1,92 +1,88 @@
 # Web Markdown Editor
-**单文件** Web Markdown 编辑器，支持实时预览、语法高亮、数学公式和图表渲染。  
-只需一个 HTML 文件即可运行，无需安装、无需依赖、无需服务器，双击即用，方便复制分享！
 
-**[点击打开查看效果](https://wangwen135.github.io/web-markdown-editor/markdown-editor.html)**
+English | [简体中文](README.zh-CN.md)
 
-## ✨ 功能特性
-- ✅ 实时 Markdown 预览
-- ✅ 代码语法高亮（支持多种编程语言）
-- ✅ 数学公式渲染（KaTeX）
-- ✅ Mermaid 图表绘制，支持独立查看、缩放、平移及 PNG/SVG 下载
-- ✅ 导出为 PDF、图片（PNG）、HTML
-- ✅ 多主题支持（亮色/暗色模式）
-- ✅ 目录导航和同步滚动
-- ✅ 本地文件保存和打开（支持 File System Access API）
-- ✅ 拖拽文件到编辑器的方式打开查看
-- ✅ 完全离线版本支持
+A lightweight, single-file Markdown editor with live preview, syntax highlighting, math formulas, and diagram rendering. It runs directly in a modern browser—no installation, dependencies, or server required.
 
-## 📸 系统界面
+**[Try the online editor](https://wangwen135.github.io/web-markdown-editor/markdown-editor.html)**
 
-![系统界面](screenshot/main.png) 
+## ✨ Features
 
+- ✅ English and Simplified Chinese interface with automatic browser-language detection
+- ✅ Live Markdown preview
+- ✅ Syntax highlighting for multiple programming languages
+- ✅ KaTeX math rendering
+- ✅ Mermaid diagrams with a dedicated viewer, zoom, pan, and PNG/SVG downloads
+- ✅ PDF, PNG, and HTML export
+- ✅ Multiple themes and independent light/dark mode
+- ✅ Table of contents and synchronized scrolling
+- ✅ Local file open/save through the File System Access API
+- ✅ Drag-and-drop Markdown files
+- ✅ Fully offline edition
 
-## 🚀 快速开始
+## 📸 Screenshot
 
-### 在线版本
+![Web Markdown Editor interface](screenshot/main.png)
 
-直接用浏览器打开 `markdown-editor.html` 即可使用。
+## 🚀 Quick start
 
-**[📥 下载 web-markdown-editor.html](https://github.com/wangwen135/web-markdown-editor/raw/main/markdown-editor.html)**
+### Online edition
 
-### 离线版本
+Open `markdown-editor.html` in a browser or use the hosted demo above.
 
-适用于内网环境或无网络连接的场景。
+**[📥 Download markdown-editor.html](https://github.com/wangwen135/web-markdown-editor/raw/main/markdown-editor.html)**
 
-**使用预打包版本**：
+### Offline edition
 
-1. **[📥 下载 web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.0/web-markdown-editor-offline.zip)**
-2. 解压到任意目录
-3. 用浏览器打开 `markdown-editor-offline.html`
-4. 开始使用，无需任何网络连接！
+Use this edition on an intranet or without an internet connection.
 
-### 桌面版本
+1. **[📥 Download web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.0/web-markdown-editor-offline.zip)**
+2. Extract the archive anywhere.
+3. Open `markdown-editor-offline.html` in a browser.
+4. Start editing—no network connection is required.
 
-Electron 桌面应用已独立到 [web-markdown-editor-desktop](https://github.com/wangwen135/web-markdown-editor-desktop)，本仓库继续专注于简洁的 Web 与离线 HTML 版本。
+See the [offline edition guide](offline/README-OFFLINE.md) for details.
 
-## 📦 版本说明
+### Desktop edition
 
-| 版本 | 文件 | 说明 |
-|------|------|------|
-| **在线版** | `markdown-editor.html` | 使用 CDN 资源，需要网络连接 |
-| **离线版** | `offline/markdown-editor-offline.html` | 所有资源本地化，完全离线运行 |
+The Electron desktop application now lives in [web-markdown-editor-desktop](https://github.com/wangwen135/web-markdown-editor-desktop). This repository remains focused on the lightweight web and offline HTML editions.
 
-## 🔨 构建离线版本
+## 📦 Editions
 
-只需维护在线版本，离线版本通过构建脚本自动生成。
+| Edition | File | Description |
+| --- | --- | --- |
+| **Online** | `markdown-editor.html` | Uses CDN resources and requires a network connection |
+| **Offline** | `offline/markdown-editor-offline.html` | Uses local assets and runs without a network connection |
 
-### 构建步骤
+## 🔨 Build the offline edition
+
+Only the online source file needs to be maintained. Generate the offline edition with:
 
 ```bash
-# 运行构建脚本
 node build-offline.js
 ```
 
-构建脚本会自动：
-1. 读取 `markdown-editor.html`
-2. 将所有 CDN 链接替换为本地 `assets/` 路径
-3. 输出到 `offline/markdown-editor-offline.html`
+The build script:
 
+1. Reads `markdown-editor.html`.
+2. Replaces CDN URLs with local `assets/` paths.
+3. Writes `offline/markdown-editor-offline.html`.
 
+When adding a CDN dependency, add its mapping to `build-offline.js`:
 
-### 新增依赖
+1. Add `<link>` and `<script>` replacements to `replacementRules`.
+2. Add JavaScript URL replacements to `themeUrlMappings`.
 
-如果新增了 CDN 依赖，只需在 `build-offline.js` 中添加映射：
+## 🛠️ Technology
 
-1. **HTML head 中的 `<link>` 或 `<script>`** → 添加到 `replacementRules` 数组
-2. **JavaScript 中的 URL** → 添加到 `themeUrlMappings` 对象（会自动全局替换）
+- **Frontend:** Vanilla HTML, CSS, and JavaScript
+- **Markdown:** Marked.js
+- **Syntax highlighting:** Highlight.js
+- **Math:** KaTeX
+- **Diagrams:** Mermaid.js
+- **UI:** Bootstrap 5
+- **Export:** html2pdf.js and html2canvas
 
+## 📄 License
 
-## 🛠️ 技术栈
-
-- **前端**: 原生 HTML/CSS/JavaScript
-- **Markdown 解析**: Marked.js
-- **代码高亮**: Highlight.js
-- **数学公式**: KaTeX
-- **图表**: Mermaid.js
-- **UI 框架**: Bootstrap 5
-- **导出功能**: html2pdf.js, html2canvas
-
-## 📄 许可证
-
-MIT License
+[MIT License](LICENSE)

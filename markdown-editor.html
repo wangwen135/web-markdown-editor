@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <title>Web Markdown 编辑器</title>
@@ -1402,6 +1402,23 @@
             padding: 0 !important;
         }
 
+        /* Bootstrap makes an active dropdown item white on blue. The language
+           row contains a native select, so keep its label readable while the
+           select is being clicked or focused. */
+        #settings-dropdown div.dropdown-item:active,
+        #settings-dropdown div.dropdown-item:focus-within {
+            color: inherit;
+            background-color: transparent;
+        }
+
+        #settings-dropdown .setting-label {
+            color: #212529;
+        }
+
+        .dark #settings-dropdown .setting-label {
+            color: #c9d1d9;
+        }
+
         #settings-dropdown .btn.dropdown-item {
             padding: 8px 16px !important;
         }
@@ -2178,6 +2195,19 @@ MIT License
                     </div>
                 </li>
                 <li>
+                    <div class="dropdown-item">
+                        <label class="setting-item" for="language-select" onclick="event.stopPropagation();">
+                            <span class="setting-label"><i class="bi bi-globe2"></i> 语言</span>
+                            <select id="language-select" class="form-select form-select-sm w-auto"
+                                    onchange="setLanguage(this.value)" onclick="event.stopPropagation();"
+                                    aria-label="界面语言">
+                                <option value="zh-CN">中文</option>
+                                <option value="en">English</option>
+                            </select>
+                        </label>
+                    </div>
+                </li>
+                <li>
                     <hr class="dropdown-divider">
                 </li>
                 <li>
@@ -2555,7 +2585,7 @@ MIT License
     mermaid.initialize({startOnLoad: false});
 
     // 编辑器默认内容
-    const DEFAULT_CONTENT = `# Web Markdown Editor - 功能演示
+    const DEFAULT_CONTENT_ZH = `# Web Markdown Editor - 功能演示
 
 欢迎使用 Web Markdown Editor！本文档展示了各种 Markdown 语法和编辑器功能。
 
@@ -2738,6 +2768,76 @@ sequenceDiagram
 - 界面颜色、背景色选项会自动适配
 `;
 
+    const DEFAULT_CONTENT_EN = `# Web Markdown Editor - Feature Demo
+
+Welcome to Web Markdown Editor! This document introduces the main Markdown syntax and editor features.
+
+## Text formatting
+
+Use **bold**, *italic*, ~~strikethrough~~, and <u>underline</u> text while the preview updates in real time.
+
+## Lists and quotes
+
+- Unordered list item
+- Another list item
+
+1. Ordered list item
+2. Another ordered item
+
+> Write blockquotes with the greater-than symbol.
+
+## Code highlighting
+
+Inline code looks like \`const answer = 42\`.
+
+\`\`\`javascript
+function greet(name) {
+    console.log(\`Hello, \${name}!\`);
+}
+greet('Markdown');
+\`\`\`
+
+## Math formulas
+
+Inline math: $E = mc^2$
+
+Block math:
+
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+$$
+
+## Mermaid diagram
+
+Mermaid diagrams can be opened in a dedicated viewer, zoomed, panned, and downloaded as PNG or SVG.
+
+\`\`\`mermaid
+flowchart LR
+    A[Write Markdown] --> B[Live Preview]
+    B --> C[Export]
+\`\`\`
+
+## Table
+
+| Feature | Support |
+| --- | --- |
+| Live preview | Yes |
+| Mermaid | Yes |
+| KaTeX | Yes |
+| Offline edition | Yes |
+
+## Links and images
+
+[Visit GitHub](https://github.com/wangwen135/web-markdown-editor)
+
+## Editor tips
+
+- Your document is saved automatically in browser storage.
+- Use the toolbar or keyboard shortcuts to format text.
+- Open, save, print, and export files from the top toolbar.
+- Switch themes and light/dark mode independently.
+`;
+
     // localStorage 工具对象
     const Storage = {
         PREFIX: 'mdEditor_',
@@ -2765,6 +2865,301 @@ sequenceDiagram
             this.set(key, value ? 'true' : 'false');
         }
     };
+
+    // UI internationalization. Chinese source strings are kept as stable keys so the
+    // single-file edition stays dependency-free and remains easy to maintain.
+    const EN_TRANSLATIONS = {
+        'Web Markdown 编辑器': 'Web Markdown Editor',
+        '拖放 Markdown 文件到这里打开': 'Drop a Markdown file here to open it',
+        '正在导出，请稍候...': 'Exporting, please wait...',
+        'Mermaid 图表': 'Mermaid Diagram',
+        '图表 1 / 1': 'Diagram 1 / 1',
+        '导出格式': 'Export format',
+        'PNG 高清图片': 'PNG high-resolution image',
+        'SVG 矢量图': 'SVG vector image',
+        '背景': 'Background',
+        '透明': 'Transparent',
+        '白色': 'White',
+        '自定义颜色': 'Custom color',
+        '下载完整图表': 'Download full diagram',
+        '关闭': 'Close',
+        '目录': 'Table of contents',
+        '新建': 'New',
+        '保存': 'Save',
+        '打开': 'Open',
+        '未命名文件': 'Untitled',
+        '预览': 'Preview',
+        '编辑': 'Edit',
+        '主题': 'Theme',
+        '全屏': 'Fullscreen',
+        '退出全屏': 'Exit fullscreen',
+        '打印': 'Print',
+        '导出': 'Export',
+        '导出 PDF': 'Export PDF',
+        '导出图片': 'Export image',
+        '导出 HTML': 'Export HTML',
+        '工具栏': 'Toolbar',
+        '状态栏': 'Status bar',
+        '同步滚动': 'Synchronized scrolling',
+        '粘贴图片为 Base64': 'Paste images as Base64',
+        '语言': 'Language',
+        '界面语言': 'Interface language',
+        '重置设置': 'Reset settings',
+        '查找和替换': 'Find and replace',
+        '查找内容': 'Find',
+        '替换为': 'Replace with',
+        '替换': 'Replace',
+        '全部替换': 'Replace all',
+        '第': 'Match ',
+        '个/共': ' of ',
+        '个': '',
+        '一级标题': 'Heading 1',
+        '二级标题': 'Heading 2',
+        '三级标题': 'Heading 3',
+        '四级标题': 'Heading 4',
+        '五级标题': 'Heading 5',
+        '六级标题': 'Heading 6',
+        '基础流程图': 'Basic flowchart',
+        '时序图': 'Sequence diagram',
+        '状态图': 'State diagram',
+        '类图': 'Class diagram',
+        '甘特图': 'Gantt chart',
+        '思维导图': 'Mind map',
+        'ER图': 'ER diagram',
+        '字符：': 'Characters: ',
+        '行数：': 'Lines: ',
+        '光标：': 'Cursor: ',
+        '行': 'Line ',
+        '列': 'Column ',
+        '标题：': 'Headings: ',
+        '段落：': 'Paragraphs: ',
+        '代码块：': 'Code blocks: ',
+        '图片：': 'Images: ',
+        '图表查看控制': 'Diagram viewer controls',
+        '上一张（←）': 'Previous (←)',
+        '上一张图表': 'Previous diagram',
+        '缩小（-）': 'Zoom out (-)',
+        '缩小': 'Zoom out',
+        '放大（+）': 'Zoom in (+)',
+        '放大': 'Zoom in',
+        '适应窗口（F）': 'Fit to window (F)',
+        '适应窗口': 'Fit to window',
+        '原始大小（0）': 'Actual size (0)',
+        '显示为百分之百': 'Show at 100 percent',
+        '下一张（→）': 'Next (→)',
+        '下一张图表': 'Next diagram',
+        '复制 Mermaid 代码': 'Copy Mermaid source',
+        '导出图表': 'Export diagram',
+        '打开导出设置': 'Open export settings',
+        '关闭（Esc）': 'Close (Esc)',
+        '关闭图表查看器': 'Close diagram viewer',
+        '导出设置': 'Export settings',
+        '选择背景颜色': 'Choose background color',
+        '背景颜色值': 'Background color value',
+        '可拖动和缩放的图表画布': 'Pannable and zoomable diagram canvas',
+        '图表缩略导航': 'Diagram minimap navigation',
+        '切换深色/浅色模式': 'Toggle dark/light mode',
+        '上一个 (Shift+F3)': 'Previous (Shift+F3)',
+        '下一个 (F3)': 'Next (F3)',
+        '拖拽调整目录宽度': 'Drag to resize the table of contents',
+        '加粗<br><b>Ctrl+B</b>': 'Bold<br><b>Ctrl+B</b>',
+        '斜体<br><b>Ctrl+I</b>': 'Italic<br><b>Ctrl+I</b>',
+        '下划线<br><b>Ctrl+U</b>': 'Underline<br><b>Ctrl+U</b>',
+        '删除线<br><b>Ctrl+Shift+S</b>': 'Strikethrough<br><b>Ctrl+Shift+S</b>',
+        '标题<br><b> Ctrl+[1~6]</b>': 'Heading<br><b> Ctrl+[1~6]</b>',
+        '水平线': 'Horizontal rule',
+        '引用<br><b>Ctrl+Shift+Q</b>': 'Blockquote<br><b>Ctrl+Shift+Q</b>',
+        '无序列表': 'Unordered list',
+        '有序列表': 'Ordered list',
+        '任务列表-未勾选': 'Unchecked task',
+        '任务列表-已勾选': 'Checked task',
+        '表格': 'Table',
+        '图片': 'Image',
+        '链接': 'Link',
+        '内嵌代码': 'Inline code',
+        '代码块': 'Code block',
+        '流程图': 'Diagram',
+        '缩小字体': 'Decrease font size',
+        '放大字体': 'Increase font size',
+        '编辑器背景颜色': 'Editor background color',
+        'Markdown 编辑器': 'Markdown editor',
+        '隐藏工具栏': 'Hide toolbar',
+        '显示工具栏': 'Show toolbar',
+        '折叠/展开预览区域': 'Collapse/expand preview',
+        '折叠或展开预览区域': 'Collapse or expand preview',
+        '隐藏状态栏': 'Hide status bar',
+        '显示状态栏': 'Show status bar',
+        '宽度 较窄': 'Narrow preview',
+        '宽度 中等': 'Medium preview',
+        '宽度 较宽': 'Wide preview',
+        '宽度 拉满': 'Full-width preview',
+        '背景颜色': 'Background color',
+        '无背景': 'No background',
+        '浅灰色': 'Light gray',
+        '浅蓝色': 'Light blue',
+        '浅绿色': 'Light green',
+        '浅黄色': 'Light yellow',
+        '蓝绿色': 'Cyan',
+        '深灰色': 'Dark gray',
+        '深炭色': 'Charcoal',
+        '深蓝色': 'Dark blue',
+        '暗紫色': 'Dark purple',
+        '暗绿色': 'Dark green',
+        '没有找到匹配项': 'No matches found',
+        '总替换数：已替换 {count} 处': 'Total replacements: {count}',
+        '已全部替换，共 {count} 处': 'Replaced all {count} occurrence(s)',
+        '目录宽度已重置': 'Table of contents width reset',
+        '当前文档中没有可查看的 Mermaid 图表': 'There are no Mermaid diagrams to view in this document',
+        '无法打开该 Mermaid 图表': 'Unable to open this Mermaid diagram',
+        'Mermaid 图表 {index}': 'Mermaid Diagram {index}',
+        '图表 {index} / {total}': 'Diagram {index} / {total}',
+        'SVG 图表已导出': 'SVG diagram exported',
+        '找不到可导出的 Mermaid SVG': 'No Mermaid SVG is available to export',
+        'Mermaid SVG 尺寸无效': 'The Mermaid SVG has invalid dimensions',
+        '浏览器无法栅格化该 SVG': 'The browser could not rasterize this SVG',
+        'PNG 编码失败': 'PNG encoding failed',
+        'SVG 导出失败：{error}': 'SVG export failed: {error}',
+        '图表过大，已安全导出为 {width} × {height}px': 'Large diagram safely exported at {width} × {height}px',
+        'PNG 图表已导出（{width} × {height}px）': 'PNG diagram exported ({width} × {height}px)',
+        'PNG 导出失败：{error}': 'PNG export failed: {error}',
+        '找不到当前图表的 Mermaid 源码': 'Mermaid source for the current diagram was not found',
+        'Mermaid 代码已复制': 'Mermaid source copied',
+        '复制失败，请手动复制': 'Copy failed; please copy the source manually',
+        '查看大图': 'Open diagram viewer',
+        '查看 Mermaid 大图': 'Open Mermaid diagram viewer',
+        '（拖入）': '(dropped)',
+        '正在生成 Mermaid PNG，请稍候...': 'Generating Mermaid PNG, please wait...',
+        '正在生成 PDF，请稍候...': 'Generating PDF, please wait...',
+        '正在生成图片，请稍候...': 'Generating image, please wait...',
+        '请输入 #RRGGBB 格式的背景颜色': 'Enter a background color in #RRGGBB format',
+        'Markdown文件': 'Markdown files',
+        '打开文件成功！': 'File opened successfully!',
+        '打开文件失败': 'Failed to open file',
+        '请拖入 Markdown 文件 (.md)': 'Please drop a Markdown file (.md)',
+        '已打开: {name}\n按 Ctrl+S 保存时将选择位置': 'Opened: {name}\nChoose a location when saving with Ctrl+S',
+        '粘贴图片功能已关闭，请在高级设置中开启"粘贴图片为Base64"选项': 'Image pasting is disabled. Enable "Paste images as Base64" in advanced settings.',
+        '保存成功！': 'Saved successfully!',
+        '保存失败': 'Save failed',
+        '请选择保存位置（已自动填入原文件名）': 'Choose a save location (the original filename is prefilled)',
+        '保存失败：{error}': 'Save failed: {error}',
+        '保存成功！\n后续保存将直接写入此文件': 'Saved successfully!\nFuture saves will write directly to this file',
+        '新建文件将清空当前内容，确定继续吗？': 'Creating a new file will clear the current content. Continue?',
+        'PDF 导出成功！': 'PDF exported successfully!',
+        'PDF 导出失败': 'PDF export failed',
+        '图片导出成功！': 'Image exported successfully!',
+        '导出图片失败': 'Image export failed',
+        '确定要重置所有设置吗？这将清除所有保存的设置和偏好。': 'Reset all settings? This will clear every saved setting and preference.',
+        '设置已重置，页面将重新加载...': 'Settings reset. The page will reload...'
+    };
+
+    const SUPPORTED_LANGUAGES = ['zh-CN', 'en'];
+    const originalTextNodes = new WeakMap();
+    let currentLanguage = getInitialLanguage();
+
+    function getInitialLanguage() {
+        const savedLanguage = Storage.get('language');
+        if (SUPPORTED_LANGUAGES.includes(savedLanguage)) return savedLanguage;
+        return (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+    }
+
+    function t(source, replacements = {}) {
+        let result = currentLanguage === 'en' ? (EN_TRANSLATIONS[source] ?? source) : source;
+        Object.entries(replacements).forEach(([key, value]) => {
+            result = result.replaceAll(`{${key}}`, String(value));
+        });
+        return result;
+    }
+
+    function shouldSkipTranslation(node) {
+        const parent = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        return !parent || Boolean(parent.closest('#editor, #preview, #toc, script, style'));
+    }
+
+    function translateStaticText(root = document.body) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+            if (shouldSkipTranslation(node)) continue;
+            let original = originalTextNodes.get(node);
+            if (!original) {
+                const match = node.nodeValue.match(/^(\s*)(.*?)(\s*)$/s);
+                if (!match || !(match[2] in EN_TRANSLATIONS)) continue;
+                original = {leading: match[1], source: match[2], trailing: match[3]};
+                originalTextNodes.set(node, original);
+            }
+            node.nodeValue = original.leading + t(original.source) + original.trailing;
+        }
+    }
+
+    function translateStaticAttributes(root = document.body) {
+        const attributeNames = ['title', 'aria-label', 'placeholder'];
+        root.querySelectorAll('*').forEach(element => {
+            if (shouldSkipTranslation(element)) return;
+            attributeNames.forEach(attributeName => {
+                const dataName = `i18n${attributeName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()).replace(/^./, letter => letter.toUpperCase())}`;
+                let source = element.dataset[dataName];
+                if (!source) {
+                    const currentValue = element.getAttribute(attributeName);
+                    if (!currentValue || !(currentValue in EN_TRANSLATIONS)) return;
+                    source = currentValue;
+                    element.dataset[dataName] = source;
+                }
+                element.setAttribute(attributeName, t(source));
+            });
+        });
+    }
+
+    function initializeTooltips() {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
+            bootstrap.Tooltip.getInstance(element)?.dispose();
+            if (element.dataset.i18nTitle) {
+                element.setAttribute('title', t(element.dataset.i18nTitle));
+            }
+            new bootstrap.Tooltip(element, {
+                trigger: 'hover',
+                delay: {show: 500, hide: 100},
+                html: true
+            });
+        });
+    }
+
+    function applyLanguage() {
+        document.documentElement.lang = currentLanguage;
+        translateStaticText();
+        translateStaticAttributes();
+
+        const languageSelect = document.getElementById('language-select');
+        if (languageSelect) languageSelect.value = currentLanguage;
+
+        const fileName = document.getElementById('currentFileName')?.textContent;
+        if (!fileName || ['未命名文件', 'Untitled'].includes(fileName)) {
+            document.title = t('Web Markdown 编辑器');
+        }
+    }
+
+    function setLanguage(language) {
+        if (!SUPPORTED_LANGUAGES.includes(language) || language === currentLanguage) return;
+        const fileNameElement = document.getElementById('currentFileName');
+        const hasUntitledName = fileNameElement && ['未命名文件', 'Untitled'].includes(fileNameElement.textContent);
+
+        currentLanguage = language;
+        Storage.set('language', language);
+        applyLanguage();
+
+        if (hasUntitledName) fileNameElement.textContent = t('未命名文件');
+        generateEditorColorOptions(document.body.classList.contains('dark'));
+        generatePreviewColorOptions(document.body.classList.contains('dark'));
+        updateModeButton();
+        updateFullscreenButton();
+        document.querySelectorAll('.mermaid-view-action').forEach(action => {
+            action.title = t('查看大图');
+            action.setAttribute('aria-label', t('查看 Mermaid 大图'));
+            const label = action.querySelector('span');
+            if (label) label.textContent = t('查看大图');
+        });
+        window.MermaidViewer?.refreshLanguage?.();
+        initializeTooltips();
+    }
 
     /* MERMAID_VIEWER_MATH_START */
     const MermaidViewerMath = (() => {
@@ -2960,14 +3355,9 @@ sequenceDiagram
         syncScrollBtn.dataset.select = isSyncScroll ? "true" : "false";
     }
 
-    // 初始化 Bootstrap Tooltips
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-        new bootstrap.Tooltip(el, {
-            trigger: 'hover',
-            delay: {show: 500, hide: 100},
-            html: true
-        });
-    });
+    // Apply the selected language before Bootstrap caches tooltip titles.
+    applyLanguage();
+    initializeTooltips();
 
     // 绑定工具栏按钮事件
     bindEditorToolbarEvents();
@@ -3080,7 +3470,7 @@ sequenceDiagram
                 button.style.setProperty('background-color', colorItem.color, 'important');
             }
 
-            button.textContent = colorItem.name;
+            button.textContent = t(colorItem.name);
             button.dataset.color = colorItem.color;
 
             li.appendChild(button);
@@ -3709,7 +4099,7 @@ erDiagram
     // 替换当前匹配
     function replaceCurrent() {
         if (currentFindIndex < 0 || currentFindIndex >= findResults.length) {
-            showToast('没有找到匹配项', 'warning');
+            showToast(t('没有找到匹配项'), 'warning');
             return;
         }
 
@@ -3744,7 +4134,7 @@ erDiagram
         // 更新累计替换次数并显示提示
         totalReplaceCount++;
         const messageEl = document.getElementById('find-replace-message');
-        messageEl.textContent = `总替换数：已替换 ${totalReplaceCount} 处`;
+        messageEl.textContent = t('总替换数：已替换 {count} 处', {count: totalReplaceCount});
 
         // 确保焦点在编辑器上，这样 Ctrl+Z 会撤销编辑器的内容
         editor.focus();
@@ -3753,7 +4143,7 @@ erDiagram
     // 全部替换
     function replaceAll() {
         if (findResults.length === 0) {
-            showToast('没有找到匹配项', 'warning');
+            showToast(t('没有找到匹配项'), 'warning');
             return;
         }
 
@@ -3782,9 +4172,9 @@ erDiagram
 
         // 更新累计替换次数并显示提示
         totalReplaceCount += replaceCount;
-        document.getElementById('find-replace-message').textContent = `总替换数：已替换 ${totalReplaceCount} 处`;
+        document.getElementById('find-replace-message').textContent = t('总替换数：已替换 {count} 处', {count: totalReplaceCount});
 
-        showToast(`已全部替换，共 ${replaceCount} 处`, 'success');
+        showToast(t('已全部替换，共 {count} 处', {count: replaceCount}), 'success');
 
         // 确保焦点在编辑器上，这样 Ctrl+Z 会撤销编辑器的内容
         editor.focus();
@@ -3941,7 +4331,7 @@ erDiagram
                 toc.style.width = TOC_DEFAULT_WIDTH + 'px';
                 Storage.set('tocWidth', TOC_DEFAULT_WIDTH);
                 currentTOCWidth = TOC_DEFAULT_WIDTH;
-                showToast('目录宽度已重置', 'info');
+                showToast(t('目录宽度已重置'), 'info');
             });
         }
 
@@ -3950,7 +4340,7 @@ erDiagram
     });
 
     /* 自动保存 */
-    editor.value = Storage.get('content', DEFAULT_CONTENT);
+    editor.value = Storage.get('content', currentLanguage === 'zh-CN' ? DEFAULT_CONTENT_ZH : DEFAULT_CONTENT_EN);
 
     // 防抖渲染（300ms 延迟）
     const debouncedRender = debounce(function() {
@@ -4316,16 +4706,20 @@ erDiagram
 
         function updateNavigation() {
             const total = state.diagrams.length;
-            elements.title.textContent = `Mermaid 图表 ${state.index + 1}`;
-            elements.count.textContent = `图表 ${state.index + 1} / ${total}`;
+            elements.title.textContent = t('Mermaid 图表 {index}', {index: state.index + 1});
+            elements.count.textContent = t('图表 {index} / {total}', {index: state.index + 1, total});
             elements.previous.disabled = state.index <= 0;
             elements.next.disabled = state.index >= total - 1;
+        }
+
+        function refreshLanguage() {
+            if (state.diagrams.length) updateNavigation();
         }
 
         function showDiagram(index) {
             refreshDiagrams();
             if (state.diagrams.length === 0) {
-                showToast('当前文档中没有可查看的 Mermaid 图表', 'error');
+                showToast(t('当前文档中没有可查看的 Mermaid 图表'), 'error');
                 close();
                 return;
             }
@@ -4349,7 +4743,7 @@ erDiagram
         function open(index, trigger = null) {
             refreshDiagrams();
             if (!state.diagrams[index]) {
-                showToast('无法打开该 Mermaid 图表', 'error');
+                showToast(t('无法打开该 Mermaid 图表'), 'error');
                 return;
             }
             state.trigger = trigger || document.activeElement;
@@ -4426,11 +4820,11 @@ erDiagram
                 refreshDiagrams();
                 state.sourceSvg = state.diagrams[state.index] || null;
             }
-            if (!state.sourceSvg) throw new Error('找不到可导出的 Mermaid SVG');
+            if (!state.sourceSvg) throw new Error(t('找不到可导出的 Mermaid SVG'));
 
             const sourceSvg = state.sourceSvg;
             const size = getSvgDimensions(sourceSvg);
-            if (size.width <= 0 || size.height <= 0) throw new Error('Mermaid SVG 尺寸无效');
+            if (size.width <= 0 || size.height <= 0) throw new Error(t('Mermaid SVG 尺寸无效'));
             const clone = sourceSvg.cloneNode(true);
             inlineExportStyles(sourceSvg, clone);
             clone.querySelectorAll('.no-document-export').forEach(node => node.remove());
@@ -4461,7 +4855,7 @@ erDiagram
         function getExportFileName(extension) {
             const currentName = document.getElementById('currentFileName').textContent || 'document';
             const baseName = currentName
-                .replace(/\s*（拖入）\s*$/, '')
+                .replace(/\s*(?:（拖入）|\(dropped\))\s*$/, '')
                 .replace(/\.(md|markdown|txt)$/i, '')
                 .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
                 .trim() || 'document';
@@ -4488,10 +4882,10 @@ erDiagram
                 const svg = buildExportSvg(getExportBackground());
                 const blob = new Blob([serializeSvg(svg)], {type: 'image/svg+xml;charset=utf-8'});
                 downloadBlob(blob, getExportFileName('svg'));
-                showToast('SVG 图表已导出');
+                showToast(t('SVG 图表已导出'));
             } catch (error) {
                 console.error('导出 Mermaid SVG 失败:', error);
-                showToast(`SVG 导出失败：${error.message}`, 'error');
+                showToast(t('SVG 导出失败：{error}', {error: error.message}), 'error');
             }
         }
 
@@ -4506,7 +4900,7 @@ erDiagram
                 };
                 image.onerror = () => {
                     URL.revokeObjectURL(url);
-                    reject(new Error('浏览器无法栅格化该 SVG'));
+                    reject(new Error(t('浏览器无法栅格化该 SVG')));
                 };
                 image.src = url;
             });
@@ -4566,7 +4960,7 @@ erDiagram
             return new Promise((resolve, reject) => {
                 canvas.toBlob(blob => {
                     if (blob) resolve(blob);
-                    else reject(new Error('PNG 编码失败'));
+                    else reject(new Error(t('PNG 编码失败')));
                 }, 'image/png');
             });
         }
@@ -4575,7 +4969,7 @@ erDiagram
             if (state.exporting) return;
             state.exporting = true;
             elements.download.disabled = true;
-            showLoadingOverlay('正在生成 Mermaid PNG，请稍候...');
+            showLoadingOverlay(t('正在生成 Mermaid PNG，请稍候...'));
             try {
                 const background = getExportBackground();
                 const svg = buildExportSvg(background);
@@ -4590,15 +4984,15 @@ erDiagram
                 const blob = await canvasToPngBlob(canvas);
                 downloadBlob(blob, getExportFileName('png'));
                 if (rasterSize.reduced) {
-                    showToast(`图表过大，已安全导出为 ${rasterSize.width} × ${rasterSize.height}px`);
+                    showToast(t('图表过大，已安全导出为 {width} × {height}px', rasterSize));
                 } else {
-                    showToast(`PNG 图表已导出（${rasterSize.width} × ${rasterSize.height}px）`);
+                    showToast(t('PNG 图表已导出（{width} × {height}px）', rasterSize));
                 }
                 canvas.width = 1;
                 canvas.height = 1;
             } catch (error) {
                 console.error('导出 Mermaid PNG 失败:', error);
-                showToast(`PNG 导出失败：${error.message}`, 'error');
+                showToast(t('PNG 导出失败：{error}', {error: error.message}), 'error');
             } finally {
                 hideLoadingOverlay();
                 elements.download.disabled = false;
@@ -4637,7 +5031,7 @@ erDiagram
         async function copySource() {
             const source = getCurrentMermaidSource();
             if (!source) {
-                showToast('找不到当前图表的 Mermaid 源码', 'error');
+                showToast(t('找不到当前图表的 Mermaid 源码'), 'error');
                 return;
             }
 
@@ -4658,7 +5052,7 @@ erDiagram
                 }
             }
 
-            showToast(copied ? 'Mermaid 代码已复制' : '复制失败，请手动复制', copied ? 'success' : 'error');
+            showToast(t(copied ? 'Mermaid 代码已复制' : '复制失败，请手动复制'), copied ? 'success' : 'error');
         }
 
         function enhance() {
@@ -4672,9 +5066,9 @@ erDiagram
                 const action = document.createElement('button');
                 action.type = 'button';
                 action.className = 'mermaid-view-action no-document-export';
-                action.setAttribute('aria-label', '查看 Mermaid 大图');
-                action.title = '查看大图';
-                action.innerHTML = '<i class="bi bi-arrows-fullscreen"></i><span>查看大图</span>';
+                action.setAttribute('aria-label', t('查看 Mermaid 大图'));
+                action.title = t('查看大图');
+                action.innerHTML = `<i class="bi bi-arrows-fullscreen"></i><span>${t('查看大图')}</span>`;
                 action.addEventListener('click', event => {
                     event.stopPropagation();
                     const diagrams = refreshDiagrams();
@@ -4888,7 +5282,7 @@ erDiagram
                 Storage.set('mermaidExportBackgroundColor', color);
             } else {
                 elements.backgroundColorText.value = elements.backgroundColor.value;
-                showToast('请输入 #RRGGBB 格式的背景颜色', 'error');
+                showToast(t('请输入 #RRGGBB 格式的背景颜色'), 'error');
             }
         });
         elements.download.addEventListener('click', () => {
@@ -4921,7 +5315,8 @@ erDiagram
             exportSvg,
             exportPng,
             copySource,
-            getCurrentMermaidSource
+            getCurrentMermaidSource,
+            refreshLanguage
         };
     })();
     window.MermaidViewer = MermaidViewer;
@@ -5151,20 +5546,20 @@ erDiagram
         document.getElementById("editorToolbar").style.display = "none";
         document.getElementById("previewToolbar").style.display = "none";
         resizerTopIcon.className = "bi bi-chevron-down";
-        resizerTop.title = "显示工具栏";
+        resizerTop.title = t('显示工具栏');
     } else {
         resizerTopIcon.className = "bi bi-chevron-up";
-        resizerTop.title = "隐藏工具栏";
+        resizerTop.title = t('隐藏工具栏');
     }
 
     // 初始化状态栏显示状态
     if (!isFootBarVisible) {
         document.querySelectorAll(".foot-bar").forEach(bar => bar.style.display = "none");
         resizerBottomIcon.className = "bi bi-chevron-up";
-        resizerBottom.title = "显示状态栏";
+        resizerBottom.title = t('显示状态栏');
     } else {
         resizerBottomIcon.className = "bi bi-chevron-down";
-        resizerBottom.title = "隐藏状态栏";
+        resizerBottom.title = t('隐藏状态栏');
     }
 
     // 初始化同步滚动设置按钮状态
@@ -5173,7 +5568,7 @@ erDiagram
     }
 
     // 初始化中间区域标题
-    resizerMid.title = "折叠预览区域";
+    resizerMid.title = t('折叠/展开预览区域');
 
     // 初始化目录显示状态
     if (!isTOCVisible) {
@@ -5451,16 +5846,22 @@ erDiagram
 
     /* 模式切换 */
     function toggleMode() {
-        const modeBtn = document.getElementById("modeBtn");
         if (currentMode === "edit") {
             currentMode = "preview";
-            modeBtn.innerHTML = '<i class="bi bi-pencil-square"></i> 编辑';
             setPreviewMode();
         } else {
             currentMode = "edit";
-            modeBtn.innerHTML = '<i class="bi bi-eye"></i> 预览';
             setEditMode();
         }
+        updateModeButton();
+    }
+
+    function updateModeButton() {
+        const modeBtn = document.getElementById('modeBtn');
+        if (!modeBtn) return;
+        modeBtn.innerHTML = currentMode === 'preview'
+            ? `<i class="bi bi-pencil-square"></i> ${t('编辑')}`
+            : `<i class="bi bi-eye"></i> ${t('预览')}`;
     }
 
     function setEditMode() {
@@ -5674,13 +6075,13 @@ erDiagram
             editorToolbar.style.display = "";
             previewToolbar.style.display = "";
             resizerTopIcon.className = "bi bi-chevron-up";
-            resizerTop.title = "隐藏工具栏";
+            resizerTop.title = t('隐藏工具栏');
             switchEl.classList.add("active");
         } else {
             editorToolbar.style.display = "none";
             previewToolbar.style.display = "none";
             resizerTopIcon.className = "bi bi-chevron-down";
-            resizerTop.title = "显示工具栏";
+            resizerTop.title = t('显示工具栏');
             switchEl.classList.remove("active");
         }
     });
@@ -5701,7 +6102,7 @@ erDiagram
             previewWrapper.style.width = "0%";
             previewWrapper.style.minHeight = "0";
             previewWrapper.style.display = "none";
-            resizerMid.title = "展开预览区域";
+            resizerMid.title = t('折叠/展开预览区域');
         } else {
             // 展开预览，恢复之前保存的比例
             editorContainer.style.width = savedEditorWidth;
@@ -5709,7 +6110,7 @@ erDiagram
             previewWrapper.style.width = savedPreviewWidth;
             previewWrapper.style.minHeight = "0";
             previewWrapper.style.display = "flex";
-            resizerMid.title = "折叠预览区域";
+            resizerMid.title = t('折叠/展开预览区域');
         }
     });
     resizerBottom.addEventListener("click", function() {
@@ -5727,14 +6128,14 @@ erDiagram
             previewFootBar.style.display = "none";
             // 改变图标为向上
             resizerBottomIcon.className = "bi bi-chevron-up";
-            resizerBottom.title = "显示状态栏";
+            resizerBottom.title = t('显示状态栏');
             switchEl.classList.remove("active");
         } else {
             editorFootBar.style.display = "flex";
             previewFootBar.style.display = "flex";
             // 改变图标为向下
             resizerBottomIcon.className = "bi bi-chevron-down";
-            resizerBottom.title = "隐藏状态栏";
+            resizerBottom.title = t('隐藏状态栏');
             switchEl.classList.add("active");
         }
     });
@@ -5744,7 +6145,7 @@ erDiagram
         try {
             const [fileHandle] = await window.showOpenFilePicker({
                 types: [{
-                    description: 'Markdown文件',
+                    description: t('Markdown文件'),
                     accept: {'text/markdown': ['.md']}
                 }],
                 multiple: false
@@ -5758,11 +6159,11 @@ erDiagram
             editor.value = contents;
             updateFileName(file.name);
             render();
-            showToast('打开文件成功！');
+            showToast(t('打开文件成功！'));
         } catch (err) {
             if (err.name !== 'AbortError') {
                 console.error('打开文件失败:', err);
-                showToast('打开文件失败', 'error');
+                showToast(t('打开文件失败'), 'error');
             }
         }
     }
@@ -5771,7 +6172,7 @@ erDiagram
     async function openDroppedFile(file) {
         // 检查是否是 Markdown 文件
         if (!file.name.endsWith('.md') && file.type !== 'text/markdown') {
-            showToast('请拖入 Markdown 文件 (.md)', 'error');
+            showToast(t('请拖入 Markdown 文件 (.md)'), 'error');
             return false;
         }
 
@@ -5781,13 +6182,13 @@ erDiagram
             editor.value = contents;
             currentFileHandle = null;  // 拖拽的文件没有可写句柄
             draggedFileName = file.name;  // 保存文件名用于后续保存
-            updateFileName(file.name + ' （拖入）');  // 标记为拖入状态
+            updateFileName(`${file.name} ${t('（拖入）')}`);  // 标记为拖入状态
             render();
-            showToast(`已打开: ${file.name}\n按 Ctrl+S 保存时将选择位置`, 'success', 5000);
+            showToast(t('已打开: {name}\n按 Ctrl+S 保存时将选择位置', {name: file.name}), 'success', 5000);
             return true;
         } catch (err) {
             console.error('打开拖拽文件失败:', err);
-            showToast('打开文件失败', 'error');
+            showToast(t('打开文件失败'), 'error');
             return false;
         }
     }
@@ -5824,7 +6225,7 @@ erDiagram
     const loadingText = document.getElementById('loadingText');
 
     function showLoadingOverlay(message) {
-        loadingText.textContent = message || '正在导出，请稍候...';
+        loadingText.textContent = message || t('正在导出，请稍候...');
         loadingOverlay.classList.add('show');
     }
 
@@ -5934,7 +6335,7 @@ erDiagram
                 openDroppedFile(file);
             }
             else {
-                showToast('请拖入 Markdown 文件 (.md)', 'error');
+                showToast(t('请拖入 Markdown 文件 (.md)'), 'error');
             }
         }
     });
@@ -5952,7 +6353,7 @@ erDiagram
 
                 // 检查是否启用了粘贴图片为Base64
                 if (!pasteImageAsBase64) {
-                    showToast('粘贴图片功能已关闭，请在高级设置中开启"粘贴图片为Base64"选项', 'warning');
+                    showToast(t('粘贴图片功能已关闭，请在高级设置中开启"粘贴图片为Base64"选项'), 'warning');
                     return;
                 }
 
@@ -5983,17 +6384,17 @@ erDiagram
                 await writable.write(editor.value);
                 await writable.close();
                 updateFileName(currentFileHandle.name);
-                showToast('保存成功！');
+                showToast(t('保存成功！'));
             } else if (draggedFileName) {
                 // 拖拽打开的文件，首次保存需要选择位置
-                showToast('请选择保存位置（已自动填入原文件名）', 'success', 3000);
+                showToast(t('请选择保存位置（已自动填入原文件名）'), 'success', 3000);
                 await saveAsWithSuggestedName(draggedFileName);
             } else {
                 await saveAs();
             }
         } catch (e) {
             console.error('保存失败:', e);
-            showToast('保存失败：' + e.message, 'danger');
+            showToast(t('保存失败：{error}', {error: e.message}), 'danger');
         }
     }
 
@@ -6003,7 +6404,7 @@ erDiagram
             currentFileHandle = await window.showSaveFilePicker({
                 suggestedName: suggestedName,
                 types: [{
-                    description: 'Markdown文件',
+                    description: t('Markdown文件'),
                     accept: {'text/markdown': ['.md']}
                 }]
             });
@@ -6012,11 +6413,11 @@ erDiagram
             await writable.close();
             updateFileName(currentFileHandle.name);  // 更新文件名（去掉"只读"标记）
             draggedFileName = null;  // 清除拖拽文件标记
-            showToast('保存成功！\n后续保存将直接写入此文件', 'success', 3000);
+            showToast(t('保存成功！\n后续保存将直接写入此文件'), 'success', 3000);
         } catch (err) {
             if (err.name !== 'AbortError') {
                 console.error('保存失败:', err);
-                showToast('保存失败', 'error');
+                showToast(t('保存失败'), 'error');
             }
         }
     }
@@ -6026,7 +6427,7 @@ erDiagram
             currentFileHandle = await window.showSaveFilePicker({
                 suggestedName: "document.md",
                 types: [{
-                    description: 'Markdown文件',
+                    description: t('Markdown文件'),
                     accept: {'text/markdown': ['.md']}
                 }]
             });
@@ -6034,11 +6435,11 @@ erDiagram
             await writable.write(editor.value);
             await writable.close();
             updateFileName(currentFileHandle.name);
-            showToast('保存成功！');
+            showToast(t('保存成功！'));
         } catch (err) {
             if (err.name !== 'AbortError') {
                 console.error('保存失败:', err);
-                showToast('保存失败', 'error');
+                showToast(t('保存失败'), 'error');
             }
         }
     }
@@ -6065,20 +6466,20 @@ erDiagram
 
     /* 新建文件 */
     function newFile() {
-        if (confirm('新建文件将清空当前内容，确定继续吗？')) {
+        if (confirm(t('新建文件将清空当前内容，确定继续吗？'))) {
             editor.value = "";
             currentFileHandle = null;
             draggedFileName = null;
             // 删除存储的内容，这样刷新后会显示默认内容
             localStorage.removeItem(Storage.PREFIX + 'content');
-            updateFileName("未命名文件");
+            updateFileName(t('未命名文件'));
             render();
         }
     }
 
     /* PDF */
     function exportPDF() {
-        showLoadingOverlay('正在生成 PDF，请稍候...');
+        showLoadingOverlay(t('正在生成 PDF，请稍候...'));
 
         const fileName = document.getElementById("currentFileName").textContent;
         const pdfFileName = fileName.replace(/\.md$/, '') + '.pdf';
@@ -6159,12 +6560,12 @@ erDiagram
 
         html2pdf().set(opt).from(preview).save().then(() => {
             hideLoadingOverlay();
-            showToast('PDF 导出成功！');
+            showToast(t('PDF 导出成功！'));
             restoreStyles();
         }).catch(err => {
             hideLoadingOverlay();
             console.error('PDF导出失败:', err);
-            showToast('PDF 导出失败', 'error');
+            showToast(t('PDF 导出失败'), 'error');
             restoreStyles();
         });
     }
@@ -6219,9 +6620,9 @@ erDiagram
     function updateFullscreenButton() {
         const btn = document.getElementById('top-tb-fullscreen');
         if (document.fullscreenElement) {
-            btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> 退出全屏';
+            btn.innerHTML = `<i class="bi bi-fullscreen-exit"></i> ${t('退出全屏')}`;
         } else {
-            btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> 全屏';
+            btn.innerHTML = `<i class="bi bi-arrows-fullscreen"></i> ${t('全屏')}`;
         }
     }
 
@@ -6234,7 +6635,7 @@ erDiagram
         const previewWidth = preview.scrollWidth;
         const previewHeight = preview.scrollHeight;
 
-        showLoadingOverlay('正在生成图片，请稍候...');
+        showLoadingOverlay(t('正在生成图片，请稍候...'));
 
         const markdownBody = document.querySelector('.markdown-body');
 
@@ -6276,11 +6677,11 @@ erDiagram
             link.href = canvas.toDataURL();
             link.click();
             hideLoadingOverlay();
-            showToast('图片导出成功！');
+            showToast(t('图片导出成功！'));
         }).catch(err => {
             hideLoadingOverlay();
             console.error('导出图片失败:', err);
-            showToast('导出图片失败', 'error');
+            showToast(t('导出图片失败'), 'error');
         });
     }
 
@@ -6365,14 +6766,14 @@ erDiagram
             switchEl.classList.add("active");
             // 更新分隔条顶部按钮图标和标题
             resizerTopIcon.className = "bi bi-chevron-up";
-            resizerTop.title = "隐藏工具栏";
+            resizerTop.title = t('隐藏工具栏');
         } else {
             editorToolbar.style.display = "none";
             previewToolbar.style.display = "none";
             switchEl.classList.remove("active");
             // 更新分隔条顶部按钮图标和标题
             resizerTopIcon.className = "bi bi-chevron-down";
-            resizerTop.title = "显示工具栏";
+            resizerTop.title = t('显示工具栏');
         }
     }
 
@@ -6430,7 +6831,7 @@ erDiagram
 
     /* 重置所有设置 */
     function resetAllSettings() {
-        if (confirm('确定要重置所有设置吗？这将清除所有保存的设置和偏好。')) {
+        if (confirm(t('确定要重置所有设置吗？这将清除所有保存的设置和偏好。'))) {
             // 清除所有 localStorage 中的 mdEditor 相关数据
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
@@ -6446,7 +6847,7 @@ erDiagram
             });
 
             // 显示提示并刷新页面
-            showToast('设置已重置，页面将重新加载...', 'success', 2000);
+            showToast(t('设置已重置，页面将重新加载...'), 'success', 2000);
             setTimeout(() => {
                 location.reload();
             }, 2000);
