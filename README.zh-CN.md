@@ -36,7 +36,7 @@
 
 适用于内网环境或无网络连接的场景。
 
-1. **[📥 下载 web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.0/web-markdown-editor-offline.zip)**
+1. **[📥 下载 web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.1/web-markdown-editor-offline.zip)**
 2. 解压到任意目录。
 3. 使用浏览器打开 `markdown-editor-offline.html`。
 4. 开始编辑，无需网络连接。

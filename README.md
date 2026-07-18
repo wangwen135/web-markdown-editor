@@ -36,7 +36,7 @@ Open `markdown-editor.html` in a browser or use the hosted demo above.
 
 Use this edition on an intranet or without an internet connection.
 
-1. **[📥 Download web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.0/web-markdown-editor-offline.zip)**
+1. **[📥 Download web-markdown-editor-offline.zip](https://github.com/wangwen135/web-markdown-editor/releases/download/v1.2.1/web-markdown-editor-offline.zip)**
 2. Extract the archive anywhere.
 3. Open `markdown-editor-offline.html` in a browser.
 4. Start editing—no network connection is required.

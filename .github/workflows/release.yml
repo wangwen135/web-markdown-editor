@@ -71,6 +71,14 @@ jobs:
           - 所有资源本地化，完全离线运行
           - 无需网络连接，双击即用
           - 支持实时预览、语法高亮、数学公式、图表渲染
+          - 新增简体中文与英文界面，可自动检测浏览器语言并手动切换
+          - Mermaid 图表支持独立查看、缩放、平移以及 PNG/SVG 下载
+
+          ## Offline edition (browser)
+
+          - Runs fully offline with all resources bundled locally
+          - Adds Simplified Chinese and English interfaces with automatic browser-language detection
+          - Mermaid diagrams support a dedicated viewer, zoom, pan, and PNG/SVG downloads
 
           ## 使用方法
 
